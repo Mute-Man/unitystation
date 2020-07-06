@@ -75,6 +75,14 @@ namespace Chemistry.Components
 			}
 		}
 
+		public ReagentMix CurrentReagentMixGet
+		{
+			get
+			{
+				return CurrentReagentMix;
+			}
+		}
+
 		/// <summary>
 		/// Returns reagent amount in container
 		/// </summary>
@@ -206,7 +214,10 @@ namespace Chemistry.Components
 			// add addition to reagent mix
 			CurrentReagentMix.Add(addition);
 			//Reactions happen here
-			ReactionSet.Apply(this, CurrentReagentMix);
+			if (ReactionSet != null)
+			{
+				ReactionSet.Apply(this, CurrentReagentMix);
+			}
 
 			// get mix total after all reactions
 			var afterReactionTotal = CurrentReagentMix.Total;
