@@ -40,6 +40,12 @@ public class AdminToolRefreshMessage : ServerMessage
 		//Round Manager
 		pageData.nextMap = SubSceneManager.AdminForcedMainStation;
 		pageData.nextAwaySite = SubSceneManager.AdminForcedAwaySite;
+		pageData.allowLavaLand = SubSceneManager.AdminAllowLavaland;
+		pageData.alertLevel = GameManager.Instance.CentComm.CurrentAlertLevel.ToString();
+
+		//Centcom
+		pageData.blockCall = GameManager.Instance.PrimaryEscapeShuttle.blockCall;
+		pageData.blockRecall = GameManager.Instance.PrimaryEscapeShuttle.blockRecall;
 
 		//Player list info:
 		pageData.players = GetAllPlayerStates(adminID);

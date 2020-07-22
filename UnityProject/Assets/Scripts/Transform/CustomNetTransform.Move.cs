@@ -74,12 +74,13 @@ public partial class CustomNetTransform
 	/// (turns on tile snapping and removes player collision check)</param>
 	/// <returns>true if push was successful</returns>
 	[Server]
-	public bool Push(Vector2Int direction, float speed = Single.NaN, bool followMode = false)
+	public bool Push(Vector2Int direction, float speed = Single.NaN, bool followMode = false, bool ignorePassable = false)
 	{
-		return PushInternal(direction, isNewtonian: false, speed: speed, followMode: followMode);
+		return PushInternal(direction, isNewtonian: false, speed: speed, followMode: followMode, ignorePassable: ignorePassable);
 	}
 
-	private bool PushInternal(Vector2Int direction, bool isNewtonian = false, float speed = Single.NaN,	bool followMode = false)
+	private bool PushInternal(
+			Vector2Int direction, bool isNewtonian = false, float speed = Single.NaN, bool followMode = false, bool ignorePassable = false)
 	{
 		if (!float.IsNaN(speed) && speed <= 0)
 		{
@@ -90,7 +91,7 @@ public partial class CustomNetTransform
 		Vector3Int origin = ServerPosition;
 		Vector3Int roundedTarget = origin + clampedDir;
 
-		if (!MatrixManager.IsPassableAt(origin, roundedTarget, true, includingPlayers: !followMode))
+		if (!ignorePassable && !MatrixManager.IsPassableAt(origin, roundedTarget, true, includingPlayers: !followMode))
 		{
 			return false;
 		}
@@ -618,7 +619,7 @@ public partial class CustomNetTransform
 		if (serverState.Speed > SpeedHitThreshold)
 		{
 			OnHit(targetPosition, info, creaturesToHit);
-			DamageTiles( targetPosition, info,MatrixManager.GetDamageableTilemapsAt(targetPosition));
+			DamageTile( goal,MatrixManager.GetDamageableTilemapsAt(targetPosition));
 		}
 
 		if (CanDriftTo(startPosition, targetPosition, isServer : true))
@@ -675,17 +676,18 @@ public partial class CustomNetTransform
 		}
 	}
 
-	private void DamageTiles(Vector3Int pos, ThrowInfo info, List<TilemapDamage> tiles)
+	/// <summary>
+	/// Damages first tile in the list
+	/// </summary>
+	/// <param name="pos"></param>
+	/// <param name="tiles"></param>
+	private void DamageTile(Vector3 pos, IReadOnlyList<TilemapDamage> tiles)
 	{
 		if (ItemAttributes == null) return;
 		if (tiles == null || tiles.Count <= 0) return;
 
-		//Hurting tiles
-		foreach (var tileDmg in tiles)
-		{
-			var damage = (int) (ItemAttributes.ServerThrowDamage);
-			tileDmg.DoThrowDamage(pos, info, damage);
-		}
+		var damage = (int) (ItemAttributes.ServerThrowDamage);
+		tiles[0].ApplyDamage(damage, AttackType.Melee, pos);
 	}
 
 	/// <Summary>

@@ -17,6 +17,7 @@ public partial class SubSceneManager
 
 	public static string AdminForcedMainStation = "Random";
 	public static string AdminForcedAwaySite = "Random";
+	public static bool AdminAllowLavaland;
 
 	IEnumerator RoundStartServerLoadSequence()
 	{
@@ -31,6 +32,10 @@ public partial class SubSceneManager
 		yield return StartCoroutine(ServerLoadAsteroids(loadTimer));
 		//Load away site:
 		yield return StartCoroutine(ServerLoadAwaySite(loadTimer));
+		//Load CentCom Scene:
+		yield return StartCoroutine(ServerLoadCentCom(loadTimer));
+		//Load Additional Scenes:
+		yield return StartCoroutine(ServerLoadAdditionalScenes(loadTimer));
 
 		netIdentity.isDirty = true;
 
@@ -84,6 +89,71 @@ public partial class SubSceneManager
 			{
 				SceneName = asteroid,
 				SceneType = SceneType.Asteroid
+			});
+		}
+	}
+
+	IEnumerator ServerLoadCentCom(SubsceneLoadTimer loadTimer)
+	{
+		loadTimer.IncrementLoadBar("Loading CentCom");
+		
+		//CENTCOM
+		foreach (var centComData in additionalSceneList.CentComScenes)
+		{
+			if (centComData.DependentScene == null || centComData.CentComSceneName == null)continue;
+
+			if (centComData.DependentScene != serverChosenMainStation) continue;
+
+			yield return StartCoroutine(LoadSubScene(centComData.CentComSceneName, loadTimer));
+
+			loadedScenesList.Add(new SceneInfo
+			{
+				SceneName = centComData.CentComSceneName,
+				SceneType = SceneType.AdditionalScenes
+			});
+
+			yield break;
+		}
+
+		//If no special CentCom load default.
+		yield return StartCoroutine(LoadSubScene(additionalSceneList.defaultCentComScene, loadTimer));
+
+		loadedScenesList.Add(new SceneInfo
+		{
+			SceneName = additionalSceneList.defaultCentComScene,
+			SceneType = SceneType.AdditionalScenes
+		});
+	}
+
+	//Load all the asteroids on the server
+	IEnumerator ServerLoadAdditionalScenes(SubsceneLoadTimer loadTimer)
+	{
+		loadTimer.IncrementLoadBar("Loading Additional Scenes");
+		foreach (var additionalScene in additionalSceneList.AdditionalScenes)
+		{
+			//LAVALAND
+			//only spawn if game config allows
+			if (additionalScene == "LavaLand" && !GameConfig.GameConfigManager.GameConfig.SpawnLavaLand && !AdminAllowLavaland)
+			{
+				continue;
+			}
+
+			if (additionalScene == "LavaLand" && !GameConfig.GameConfigManager.GameConfig.SpawnLavaLand)
+			{
+				//reset back to false for the next round if false before.
+				AdminAllowLavaland = false;
+			}
+			else if (additionalScene == "LavaLand")
+			{
+				AdminAllowLavaland = true;
+			}
+
+			yield return StartCoroutine(LoadSubScene(additionalScene, loadTimer));
+
+			loadedScenesList.Add(new SceneInfo
+			{
+				SceneName = additionalScene,
+				SceneType = SceneType.AdditionalScenes
 			});
 		}
 	}

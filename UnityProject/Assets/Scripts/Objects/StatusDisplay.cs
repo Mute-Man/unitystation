@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 /// Mounted monitor to show simple images or text
 /// Escape Shuttle channel is a priority one and will overtake other channels.
 /// </summary>
-public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<HandApply>
+public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<HandApply>, ISetMultitoolMaster
 {
 	public static readonly int MAX_CHARS_PER_PAGE = 18;
 
@@ -18,7 +19,7 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 	[SerializeField]
 	private Text textField;
 
-	[SyncVar(hook = nameof(SyncSprite))] private MountedMonitorState stateSync;
+	[SyncVar(hook = nameof(SyncSprite))] public MountedMonitorState stateSync;
 	[SyncVar(hook = nameof(SyncStatusText))] private string statusText = string.Empty;
 
 	public bool hasCables = true;
@@ -28,6 +29,10 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 	public Sprite openCabled;
 	public Sprite closedOff;
 	public SpriteSheetAndData joeNews;
+	public List<DoorController> doorControllers = new List<DoorController>();
+	public CentComm centComm;
+	public int currentTimerSeconds;
+	public bool countingDown;
 
 	public enum MountedMonitorState
 	{
@@ -39,27 +44,18 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 		OpenEmpty
 	};
 
-	public StatusDisplayChannel Channel
-	{
-		get => channel;
-		set
-		{
-			cachedText = string.Empty;
-			channel = value;
-		}
-	}
-	/// <summary>
-	/// don't change it in runtime, use Channel property instead
-	/// </summary>
 	[SerializeField]
 	private StatusDisplayChannel channel = StatusDisplayChannel.Command;
 
-	/// <summary>
-	/// used for restoring selected channel message when priority message is gone
-	/// </summary>
-	private string cachedText = String.Empty;
+	[SerializeField]
+	private MultitoolConnectionType conType = MultitoolConnectionType.DoorButton;
+	public MultitoolConnectionType ConType  => conType;
+	private bool multiMaster = true;
+	public bool MultiMaster => multiMaster;
 
-	#region syncvar boilerplate and init
+	public void AddSlave(object SlaveObject)
+	{
+	}
 
 	public void OnSpawnServer(SpawnInfo info)
 	{
@@ -69,8 +65,26 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 			stateSync = MountedMonitorState.OpenEmpty;
 			statusText = GameManager.Instance.CentComm.CommandStatusString;
 		}
-		SyncStatusText(statusText, statusText);
 
+		if (doorControllers.Count > 0)
+		{
+			OnTextBroadcastReceived(StatusDisplayChannel.DoorTimer);
+			foreach (var door in doorControllers)
+			{
+				if (door.IsHackable)
+				{
+					HackingNode outsideSignalOpen = door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OutsideSignalOpen);
+					outsideSignalOpen.AddConnectedNode(door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OpenDoor));
+					outsideSignalOpen.AddConnectedNode(door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.CancelCloseTimer));
+
+					HackingNode outsideSignalClose = door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OutsideSignalClose);
+					outsideSignalClose.AddConnectedNode(door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.CloseDoor));
+				}
+			}
+		}
+		SyncSprite(stateSync, stateSync);
+		centComm = GameManager.Instance.CentComm;
+		centComm.OnStatusDisplayUpdate.AddListener( OnTextBroadcastReceived );
 	}
 
 	/// <summary>
@@ -78,18 +92,11 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 	/// </summary>
 	public void OnDespawnServer(DespawnInfo info)
 	{
-		GameManager.Instance.CentComm.OnStatusDisplayUpdate.RemoveListener( OnTextBroadcastReceived );
+		centComm.OnStatusDisplayUpdate.RemoveListener( OnTextBroadcastReceived );
 		channel = StatusDisplayChannel.Command;
 		textField.text = string.Empty;
 		this.TryStopCoroutine( ref blinkHandle );
 	}
-
-	private void Start()
-	{
-		GameManager.Instance.CentComm.OnStatusDisplayUpdate.AddListener( OnTextBroadcastReceived );
-	}
-
-	#endregion
 
 	/// <summary>
 	/// SyncVar hook to show text on client.
@@ -162,6 +169,8 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 				Spawn.ServerPrefab(CommonPrefabs.Instance.SingleCableCoil, SpawnDestination.At(gameObject), 5);
 				stateSync = MountedMonitorState.OpenEmpty;
 				hasCables = false;
+				currentTimerSeconds = 0;
+				doorControllers.Clear();
 			}
 		} else if (stateSync == MountedMonitorState.NonScrewedPanel)
 		{
@@ -209,8 +218,28 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 				stateSync = MountedMonitorState.StatusText;
 			} else if (stateSync == MountedMonitorState.StatusText)
 			{
-				ChangeChannelMessage(interaction);
-				stateSync = MountedMonitorState.Image;
+				if (channel == StatusDisplayChannel.DoorTimer)
+				{
+					currentTimerSeconds += 60;
+					if (currentTimerSeconds > 600)
+					{
+						currentTimerSeconds = 1;
+					}
+
+					if (!countingDown)
+					{
+						StartCoroutine(TickTimer());
+					}
+					else
+					{
+						OnTextBroadcastReceived(StatusDisplayChannel.DoorTimer);
+					}
+				}
+				else
+				{
+					ChangeChannelMessage(interaction);
+					stateSync = MountedMonitorState.Image;
+				}
 			}
 		}
 	}
@@ -240,21 +269,83 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 	}
 
 
-	private void OnTextBroadcastReceived(StatusDisplayChannel broadcastedChannel, string broadcastedText)
+	private void OnTextBroadcastReceived(StatusDisplayChannel broadcastedChannel)
 	{
-		bool textIsEmpty = broadcastedText.Length == 0;
-		bool channelIsDifferent = broadcastedChannel != channel;
+		if (broadcastedChannel == StatusDisplayChannel.DoorTimer)
+		{
+			statusText = GameManager.FormatTime(currentTimerSeconds, "CELL\n");
+			channel = broadcastedChannel;
+			return;
+		}
 
-		if ( channelIsDifferent )
+		if (channel == StatusDisplayChannel.DoorTimer)
+			return;
+
+		if (broadcastedChannel == StatusDisplayChannel.EscapeShuttle)
 		{
-			if ( broadcastedChannel == StatusDisplayChannel.EscapeShuttle )
-			{
-				SyncStatusText(statusText, textIsEmpty ? cachedText : broadcastedText );
+			statusText = centComm.EscapeShuttleTimeString;
+			channel = broadcastedChannel;
+			return;
+		}
+
+		if (channel == StatusDisplayChannel.EscapeShuttle)
+			return;
+
+		statusText = centComm.CommandStatusString;
+		channel = broadcastedChannel;
+	}
+
+	public void LinkDoor(DoorController doorController)
+	{
+		doorControllers.Add(doorController);
+		OnTextBroadcastReceived(StatusDisplayChannel.DoorTimer);
+		if (stateSync == MountedMonitorState.Image)
+		{
+			stateSync = MountedMonitorState.StatusText;
+		}
+	}
+
+	private IEnumerator TickTimer()
+	{
+		countingDown = true;
+		CloseDoors();
+		while (currentTimerSeconds > 0)
+		{
+			OnTextBroadcastReceived(StatusDisplayChannel.DoorTimer);
+			yield return WaitFor.Seconds(1);
+			currentTimerSeconds -= 1;
+		}
+		OnTextBroadcastReceived(StatusDisplayChannel.DoorTimer);
+		OpenDoors();
+		countingDown = false;
+	}
+
+	private void CloseDoors()
+	{
+		foreach (var door in doorControllers)
+		{
+			if (door.IsHackable){
+				door.HackingProcess.SendOutputToConnectedNodes(HackingIdentifier.OutsideSignalClose);
 			}
-		} else
+			else
+			{
+				door.TryClose();
+			}
+		}
+	}
+
+	private void OpenDoors()
+	{
+		foreach (var door in doorControllers)
 		{
-			cachedText = broadcastedText;
-			SyncStatusText(statusText, broadcastedText );
+			if (door.IsHackable)
+			{
+				door.HackingProcess.SendOutputToConnectedNodes(HackingIdentifier.OutsideSignalOpen);
+			}
+			else
+			{
+				door.TryOpen(blockClosing: true);
+			}
 		}
 	}
 
@@ -299,6 +390,7 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 public enum StatusDisplayChannel
 {
 	EscapeShuttle,
-	Command
+	Command,
+	DoorTimer
 }
-public class StatusDisplayUpdateEvent : UnityEvent<StatusDisplayChannel, string> { }
+public class StatusDisplayUpdateEvent : UnityEvent<StatusDisplayChannel> { }

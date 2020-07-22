@@ -4,7 +4,7 @@ using Electric.Inheritance;
 using UnityEngine;
 using Mirror;
 
-public class APC : SubscriptionController, ICheckedInteractable<HandApply>, INodeControl, IServerDespawn
+public class APC : SubscriptionController, ICheckedInteractable<HandApply>, INodeControl, IServerDespawn, ISetMultitoolMaster
 {
 	// -----------------------------------------------------
 	//					ELECTRICAL THINGS
@@ -226,6 +226,7 @@ public class APC : SubscriptionController, ICheckedInteractable<HandApply>, INod
 			case APCState.Critical:
 				loadedScreenSprites = criticalSprites;
 				EmergencyState = true;
+				TriggerSoundOff();
 				if (!RefreshDisplay) StartRefresh();
 				break;
 			case APCState.Dead:
@@ -367,13 +368,16 @@ public class APC : SubscriptionController, ICheckedInteractable<HandApply>, INod
 			Gizmos.DrawSphere(lightSource.transform.position, 0.25f);
 		}
 	}
+
+	#endregion
+
 	//######################################## Multitool interaction ##################################
 	[SerializeField]
 	private MultitoolConnectionType conType = MultitoolConnectionType.APC;
 	public MultitoolConnectionType ConType  => conType;
 
 	[SerializeField]
-	private bool multiMaster = false;
+	private bool multiMaster = true;
 	public bool MultiMaster  => multiMaster;
 
 	public void AddSlave(object SlaveObject)
@@ -425,7 +429,21 @@ public class APC : SubscriptionController, ICheckedInteractable<HandApply>, INod
 			poweredDevice.RelatedAPC = this;
 		}
 	}
-	#endregion
 
+	public void TriggerSoundOff()
+	{
+		if(!CustomNetworkManager.IsServer) return;
+
+		StartCoroutine(TriggerSoundOffRoutine());
+	}
+
+	private IEnumerator TriggerSoundOffRoutine()
+	{
+		yield return new WaitForSeconds(1f);
+
+		if (State != APCState.Critical) yield break;
+
+		SoundManager.PlayNetworkedAtPos("APCPowerOff", gameObject.WorldPosServer());
+	}
 }
 

@@ -55,5 +55,13 @@ namespace GameConfig
 	public class GameConfig
 	{
 		public bool RandomEventsAllowed;
+		public bool SpawnLavaLand;
+		public int MinPlayersForCountdown;
+		public float PreRoundTime;
+		public float RoundEndTime;
+		public int RoundsPerMap;
+		public string InitialGameMode;
+		public bool RespawnAllowed;
+		public int ShuttleDepartTime;
 	}
 }

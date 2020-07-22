@@ -179,10 +179,11 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 				StartCoroutine(SwitchCoolDown());
 				foreach (var firelock in FireLockList)
 				{
-					if (firelock.Controller.IsClosed)
-					{
-						firelock.Controller.ServerOpen();
-					}
+					if(firelock == null) continue;
+					var controller = firelock.Controller;
+					if (controller == null) continue;
+
+					controller.TryOpen();
 				}
 			}
 			else

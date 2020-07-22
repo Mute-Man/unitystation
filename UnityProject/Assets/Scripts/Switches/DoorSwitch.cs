@@ -8,7 +8,7 @@ using Mirror;
 /// <summary>
 /// Allows object to function as a door switch - opening / closing door when clicked.
 /// </summary>
-public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply>
+public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply>, ISetMultitoolMaster
 {
 	private SpriteRenderer spriteRenderer;
 	public Sprite greenSprite;
@@ -22,10 +22,41 @@ public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply
 	public Access access;
 
 
-	public DoorController[] doorControllers;
+	public List<DoorController> doorControllers = new List<DoorController>();
 
 	private bool buttonCoolDown = false;
 	private AccessRestrictions accessRestrictions;
+
+	[SerializeField]
+	private MultitoolConnectionType conType = MultitoolConnectionType.DoorButton;
+	public MultitoolConnectionType ConType  => conType;
+
+	private bool multiMaster = true;
+	public bool MultiMaster => multiMaster;
+
+	public void AddSlave(object SlaveObject)
+	{
+	}
+
+	public void OnSpawnServer(SpawnInfo info)
+	{
+		if (doorControllers.Count > 0)
+		{
+			foreach (var door in doorControllers)
+			{
+				if (door.IsHackable)
+				{
+					HackingNode outsideSignalOpen = door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OutsideSignalOpen);
+					outsideSignalOpen.AddConnectedNode(door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OpenDoor));
+
+					HackingNode outsideSignalClose = door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.OutsideSignalClose);
+					outsideSignalClose.AddConnectedNode(door.HackingProcess.GetNodeWithInternalIdentifier(HackingIdentifier.CloseDoor));
+				}
+			}
+		}
+
+	}
+
 
 	private void Start()
 	{
@@ -58,41 +89,42 @@ public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply
 	{
 		if (accessRestrictions != null && restricted)
 		{
-			if (accessRestrictions.CheckAccess(interaction.Performer))
-			{
-				RunDoorController();
-				RpcPlayButtonAnim(true);
-			}
-			else
+			if (!accessRestrictions.CheckAccess(interaction.Performer))
 			{
 				RpcPlayButtonAnim(false);
+				return;
 			}
 		}
-		else
-		{
-			RunDoorController();
-			RpcPlayButtonAnim(true);
-		}
+
+		RunDoorController();
+		RpcPlayButtonAnim(true);
+
 	}
 
 	private void RunDoorController()
 	{
-		for (int i = 0; i < doorControllers.Length; i++)
+		foreach (DoorController door in doorControllers)
 		{
-			if(doorControllers[i] == null) continue;
-
-			if (doorControllers[i].IsClosed)
+			if (door.IsClosed)
 			{
-				if (doorControllers[i] != null)
+				if (door.IsHackable)
 				{
-					doorControllers[i].ServerOpen();
+					door.HackingProcess.SendOutputToConnectedNodes(HackingIdentifier.OutsideSignalOpen);
+				}
+				else
+				{
+					door.TryOpen();
 				}
 			}
 			else
 			{
-				if (doorControllers[i] != null)
+				if (door.IsHackable)
 				{
-					doorControllers[i].ServerClose();
+					door.HackingProcess.SendOutputToConnectedNodes(HackingIdentifier.OutsideSignalClose);
+				}
+				else
+				{
+					door.TryClose();
 				}
 			}
 		}
@@ -161,7 +193,7 @@ public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply
 
 		//Highlighting all controlled doors with red lines and spheres
 		Gizmos.color = new Color(1, 0.5f, 0, 1);
-		for (int i = 0; i < doorControllers.Length; i++)
+		for (int i = 0; i < doorControllers.Count; i++)
 		{
 			var doorController = doorControllers[i];
 			if(doorController == null) continue;
@@ -189,15 +221,11 @@ public class DoorSwitch : SubscriptionController, ICheckedInteractable<HandApply
 	{
 		if (doorControllers.Contains(doorController))
 		{
-			var list = doorControllers.ToList();
-			list.Remove(doorController);
-			doorControllers = list.ToArray();
+			doorControllers.Remove(doorController);
 		}
 		else
 		{
-			var list = doorControllers.ToList();
-			list.Add(doorController);
-			doorControllers = list.ToArray();
+			doorControllers.Add(doorController);
 		}
 	}
 

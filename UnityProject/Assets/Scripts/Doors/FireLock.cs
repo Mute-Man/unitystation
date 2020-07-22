@@ -31,24 +31,24 @@ public class FireLock : InteractableDoor, ISetMultitoolSlave
 
 	void TriggerAlarm()
 	{
-		if (fireAlarm)
+		if (!Controller.IsWelded)
 		{
-			fireAlarm.SendCloseAlerts();
-		}
-		else
-		{
-			ReceiveAlert();
+			if (fireAlarm)
+			{
+				fireAlarm.SendCloseAlerts();
+			}
+			else
+			{
+				ReceiveAlert();
+			}
 		}
 	}
 
 	public void ReceiveAlert()
 	{
-		if (Controller == null) return;
-
-		if (!Controller.IsClosed)
-		{
-			Controller.ServerTryClose();
-		}
+		if (Controller == null)
+			return;
+		Controller.CloseSignal();
 	}
 
 	public void OnSpawnServer(SpawnInfo info)
@@ -58,7 +58,7 @@ public class FireLock : InteractableDoor, ISetMultitoolSlave
 		RegisterTile registerTile = GetComponent<RegisterTile>();
 		MetaDataLayer metaDataLayer = MatrixManager.AtPoint(registerTile.WorldPositionServer, true).MetaDataLayer;
 		metaNode = metaDataLayer.Get(registerTile.LocalPositionServer, false);
-		Controller.ServerOpen();
+		Controller.Open();
 	}
 
 	//Copied over from LightSource.cs

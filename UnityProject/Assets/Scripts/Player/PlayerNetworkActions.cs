@@ -2,6 +2,11 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using AdminTools;
+using Audio;
+using Items.PDA;
+using UnityEngine;
+using Mirror;
+using UI.PDA;
 using Audio.Containers;
 using UnityEngine;
 using Mirror;
@@ -243,11 +248,14 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 		if (!Cooldowns.TryStartServer(playerScript, CommonCooldowns.Instance.Interaction)) return;
 		var timeTaken = occupiedSlots * .4f;
 		void ProgressComplete()
-		{
+		{ var victimsHealth = toDisrobe.GetComponent < PlayerHealth >();
 			foreach (var itemSlot in itemStorage.GetItemSlots())
 			{
 				//skip slots which have special uses
 				if (itemSlot.NamedSlot == NamedSlot.handcuffs) continue;
+						// cancels out of the loop if player gets up
+				if (!victimsHealth.IsCrit) break;
+
 				Inventory.ServerDrop(itemSlot);
 			}
 		}
@@ -557,6 +565,8 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 
 		if (playerScript.mind.IsSpectator) return;
 
+		if(playerScript.mind.ghostLocked) return;
+
 		if (!playerScript.IsGhost )
 		{
 			Logger.LogWarningFormat("Either player {0} is not dead or not currently a ghost, ignoring EnterBody", Category.Health, body);
@@ -622,6 +632,20 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 				paperComponent.UpdatePlayer(gameObject);
 			}
 		}
+	}
+
+
+	/// <summary>
+	/// A variation of CmdRequestPaperEdit, but is used for the PDA notes system
+	/// </summary>
+	[Command]
+	public void CmdRequestNoteEdit(GameObject pdaObject, string newMsg)
+	{
+		if (!Validations.CanInteract(playerScript, NetworkSide.Server)) return;
+		PDANotesNetworkHandler noteNetworkScript = pdaObject.GetComponent<PDANotesNetworkHandler>();
+		noteNetworkScript.SetServerString(newMsg);
+		noteNetworkScript.UpdatePlayer(gameObject);
+
 	}
 
 	[Command]
@@ -816,28 +840,6 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 	}
 
 	[Command]
-	public void CmdPlaySound(string index, string adminId, string adminToken)
-	{
-		PlaySound(index, adminId, adminToken);
-	}
-
-	[Server]
-	public void PlaySound(string index, string adminId, string adminToken)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		var players = FindObjectsOfType(typeof(PlayerScript));
-
-		if (players == null) return;//If list of Players is empty dont run rest of code.
-
-		foreach (PlayerScript player in players)
-		{
-			SoundManager.PlayNetworkedForPlayerAtPos(player.gameObject, player.gameObject.GetComponent<RegisterTile>().WorldPositionClient, index);
-		}
-	}
-
-	[Command]
 	public void CmdAdminMakeHotspot(GameObject onObject, string adminId, string adminToken)
 	{
 		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
@@ -873,92 +875,11 @@ public partial class PlayerNetworkActions : NetworkBehaviour
 	}
 
 	[Command]
-	public void CmdSendCentCommAnnouncement(string adminId, string adminToken, string text)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		CentComm.MakeAnnouncement(CentComm.CentCommAnnounceTemplate, text, CentComm.UpdateSound.notice);
-	}
-
-	[Command]
-	public void CmdSendCentCommReport(string adminId, string adminToken, string text)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-		GameManager.Instance.CentComm.MakeCommandReport(text,
-														CentComm.UpdateSound.notice);
-	}
-
-	[Command]
 	public void CmdGetAdminOverlayFullUpdate(string adminId, string adminToken)
 	{
 		AdminOverlay.RequestFullUpdate(adminId, adminToken);
 	}
 
-	[Command]
-	public void CmdToggleOOCMute(string adminId, string adminToken)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		string msg;
-
-		if (Chat.OOCMute)
-		{
-			Chat.OOCMute = false;
-			msg = "OOC has been unmuted";
-		}
-		else
-		{
-			Chat.OOCMute = true;
-			msg = "OOC has been muted";
-		}
-
-		Chat.AddGameWideSystemMsgToChat($"<color=blue>{msg}</color>");
-		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookOOCURL, msg, "");
-	}
-
-	[Command]
-	public void CmdTriggerGameEvent(string adminId, string adminToken, int eventIndex, bool isFake, bool announceEvent, InGameEventType eventType)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		InGameEventsManager.Instance.TriggerSpecificEvent(eventIndex, eventType, isFake, PlayerList.Instance.GetByUserID(adminId).Username, announceEvent);
-	}
-
-	[Command]
-	public void CmdChangeNextMap(string adminId, string adminToken, string nextMap)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		if (SubSceneManager.AdminForcedMainStation == nextMap) return;
-
-		var msg = $"{PlayerList.Instance.GetByUserID(adminId).Username}: Changed the next round map from {SubSceneManager.AdminForcedMainStation} to {nextMap}.";
-
-		UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord(msg, null);
-		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, msg, "");
-
-		SubSceneManager.AdminForcedMainStation = nextMap;
-	}
-
-	[Command]
-	public void CmdChangeAwaySite(string adminId, string adminToken, string nextAwaySite)
-	{
-		var admin = PlayerList.Instance.GetAdmin(adminId, adminToken);
-		if (admin == null) return;
-
-		if (SubSceneManager.AdminForcedAwaySite == nextAwaySite) return;
-
-		var msg = $"{PlayerList.Instance.GetByUserID(adminId).Username}: Changed the next round away site from {SubSceneManager.AdminForcedAwaySite} to {nextAwaySite}.";
-
-		UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord(msg, null);
-		DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, msg, "");
-
-		SubSceneManager.AdminForcedAwaySite = nextAwaySite;
-	}
 	#endregion
 
 	[Command]

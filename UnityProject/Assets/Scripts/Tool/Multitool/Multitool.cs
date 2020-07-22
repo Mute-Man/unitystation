@@ -174,5 +174,8 @@ public enum MultitoolConnectionType
 	Conveyor,
 	BoilerTurbine,
 	ReactorChamber,
-	FireAlarm
+	FireAlarm,
+	LightSwitch,
+	DoorButton,
+	GeneralSwitch
 }
