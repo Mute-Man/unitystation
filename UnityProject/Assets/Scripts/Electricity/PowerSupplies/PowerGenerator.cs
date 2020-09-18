@@ -1,211 +1,221 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
-public class PowerGenerator : NetworkBehaviour, ICheckedInteractable<HandApply>, INodeControl
+
+public class PowerGenerator : NetworkBehaviour, ICheckedInteractable<HandApply>, INodeControl, IExaminable
 {
-	private const float PlasmaConsumptionRate = 0.02f;
+	[Tooltip("Whether this generator should start running when spawned.")]
+	[SerializeField]
+	private bool startAsOn = false;
 
-	public ObjectBehaviour objectBehaviour;
-	[SyncVar(hook = nameof(UpdateSecured))]
-	public bool isSecured; //To ground
+	[Tooltip("The rate of fuel this generator should consume.")]
+	[Range(0.01f, 0.1f)]
+	[SerializeField]
+	private float plasmaConsumptionRate = 0.02f;
+
 	private RegisterTile registerTile;
-	public bool startSecured;
-	public bool startAsOn;
-	public Sprite generatorSecuredSprite;
-	public Sprite generatorOnSprite;
-	public Sprite generatorUnSecuredSprite;
-	public SpriteRenderer spriteRend;
-	public AudioSource generatorRunSfx;
-	public AudioSource generatorEndSfx;
-	public ParticleSystem smokeParticles;
-	//Server only
-	public List<SolidPlasma> plasmaFuel = new List<SolidPlasma>();
+	private ItemSlot itemSlot;
+	private WrenchSecurable securable;
+	private SpriteHandler baseSpriteHandler;
+	private ElectricalNodeControl electricalNodeControl;
 
-	[SyncVar(hook = nameof(UpdateState))]
-	public bool isOn = false;
+	[SerializeField]
+	private AudioSource generatorRunSfx = default;
+	[SerializeField]
+	private AudioSource generatorEndSfx = default;
+	[SerializeField]
+	private ParticleSystem smokeParticles = default;
 
-	public ElectricalNodeControl ElectricalNodeControl;
+	[SyncVar(hook = nameof(OnSyncState))]
+	private bool isOn;
+	private float fuelAmount;
+	private float fuelPerSheet = 10f;
+
+	private enum SpriteState
+	{
+		Unsecured = 0,
+		Off = 1,
+		On = 2
+	}
+
+	#region Lifecycle
 
 	void Awake()
 	{
-		EnsureInit();
-	}
-
-	private void EnsureInit()
-	{
-		if (registerTile != null) return;
 		registerTile = GetComponent<RegisterTile>();
+		securable = GetComponent<WrenchSecurable>();
+		baseSpriteHandler = GetComponentInChildren<SpriteHandler>();
+		electricalNodeControl = GetComponent<ElectricalNodeControl>();
 	}
-
-	public void PowerNetworkUpdate() { }
 
 	public override void OnStartServer()
 	{
-		EnsureInit();
-		UpdateSecured(isSecured, startSecured);
-		StartCoroutine(CheckStartingPlasma());
-	}
-
-	/// <summary>
-	/// Map solid plasma so that it is sitting on the same tile as the generator for it to be added
-	/// to the starting plasma amounts.false Server Only.
-	/// </summary>
-	IEnumerator CheckStartingPlasma()
-	{
-		yield return WaitFor.Seconds(1); //Todo: figure out a robust way to init such things, don't rely on timeouts
-		var plasmaObjs = registerTile.Matrix.Get<SolidPlasma>(registerTile.LocalPositionServer, true);
-		foreach (SolidPlasma plasma in plasmaObjs)
-		{
-			plasmaFuel.Add(plasma);
-			plasma.GetComponent<CustomNetTransform>().DisappearFromWorldServer();
-		}
-
+		var itemStorage = GetComponent<ItemStorage>();
+		itemSlot = itemStorage.GetIndexedItemSlot(0);
+		securable.OnAnchoredChange.AddListener(OnSecuredChanged);
 		if (startAsOn)
 		{
-			UpdateServerState(startAsOn);
+			fuelAmount = fuelPerSheet;
+			TryToggleOn();
 		}
 	}
+	#endregion Lifecycle
 
-	public override void OnStartClient()
+	public void PowerNetworkUpdate() { }
+
+	private void OnSecuredChanged()
 	{
-		EnsureInit();
-		UpdateState(isOn, isOn);
+		if (securable.IsAnchored)
+		{
+			baseSpriteHandler.ChangeSprite((int) SpriteState.Off);
+		}
+		else
+		{
+			ToggleOff();
+			baseSpriteHandler.ChangeSprite((int) SpriteState.Unsecured);
+		}
+
+		ElectricalManager.Instance.electricalSync.StructureChange = true;
 	}
 
-	public void UpdateState(bool wasOn, bool isOn)
+	private void OnSyncState(bool oldState, bool newState)
 	{
-		EnsureInit();
+		isOn = newState;
 		if (isOn)
 		{
+			baseSpriteHandler.PushTexture();
 			generatorRunSfx.Play();
-			spriteRend.sprite = generatorOnSprite;
 			smokeParticles.Play();
 		}
 		else
 		{
 			generatorRunSfx.Stop();
 			smokeParticles.Stop();
-			if (isSecured)
-			{
-				generatorEndSfx.Play();
-				spriteRend.sprite = generatorSecuredSprite;
-			}
-			else
-			{
-				spriteRend.sprite = generatorUnSecuredSprite;
-			}
+			generatorEndSfx.Play();
 		}
 	}
 
-	public void UpdateServerState(bool _isOn)
+	#region Interaction
+
+	public string Examine(Vector3 worldPos = default)
 	{
-		if (_isOn && TryBurnFuel())
-		{
-			ElectricalNodeControl.TurnOnSupply();
-			isOn = true;
-		}
-		else
-		{
-			isOn = false;
-			ElectricalNodeControl.TurnOffSupply();
-			if (plasmaFuel.Count > 0)
-			{
-				plasmaFuel[0].StopBurningPlasma();
-			}
-		}
-	}
-
-	void UpdateSecured(bool wasSecured, bool _isSecured)
-	{
-		EnsureInit();
-		isSecured = _isSecured;
-		if (isServer)
-		{
-			objectBehaviour.ServerSetPushable(!isSecured);
-		}
-
-		SoundManager.PlayAtPosition("Wrench", transform.position, gameObject);
-
-		if (isSecured)
-		{
-			if (isOn)
-			{
-				spriteRend.sprite = generatorOnSprite;
-			}
-			else
-			{
-				spriteRend.sprite = generatorSecuredSprite;
-			}
-		}
-		else
-		{
-			spriteRend.sprite = generatorUnSecuredSprite;
-		}
-	}
-
-	bool TryBurnFuel()
-	{
-		if (plasmaFuel.Count > 0)
-		{
-			plasmaFuel[0].StartBurningPlasma(PlasmaConsumptionRate, FuelExhaustedEvent);
-			return true;
-		}
-
-		return false;
-	}
-
-	//Server Only
-	void FuelExhaustedEvent()
-	{
-		if (plasmaFuel.Count > 0)
-		{
-			plasmaFuel.RemoveAt(0);
-		}
-
-		if (isOn)
-		{
-			if (!TryBurnFuel())
-			{
-				UpdateServerState(false);
-			}
-		}
+		return $"The generator is {(HasFuel() ? "fueled" : "unfueled")} and " +
+				$"{(isOn ? "running" : "not running")}.";
 	}
 
 	public bool WillInteract(HandApply interaction, NetworkSide side)
 	{
 		if (!DefaultWillInteract.Default(interaction, side)) return false;
 		if (interaction.TargetObject != gameObject) return false;
-		if (interaction.HandObject != null &&
-		!Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Wrench) &&
-		!Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.SolidPlasma)) return false;
+		if (interaction.HandObject != null && !Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.SolidPlasma)) return false;
+
 		return true;
 	}
 
 	public void ServerPerformInteraction(HandApply interaction)
 	{
-		if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Wrench))
-		{
-			UpdateSecured(isSecured, !isSecured);
-			ElectricalManager.Instance.electricalSync.StructureChange = true;
-			if (!isSecured && isOn)
-			{
-				isOn = !isOn;
-				UpdateServerState(isOn);
-			}
-			return;
-		}
-
 		if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.SolidPlasma))
 		{
-			var plasma = Inventory.ServerVanishStackable(interaction.HandSlot);
-			plasmaFuel.Add(plasma.GetComponent<SolidPlasma>());
-			return;
+			int amountTransfered;
+			var handStackable = interaction.HandObject.GetComponent<Stackable>();
+			if (itemSlot.Item)
+			{
+				var stackable = itemSlot.Item.GetComponent<Stackable>();
+				if (stackable.SpareCapacity == 0)
+				{
+					Chat.AddWarningMsgFromServer(interaction.Performer, "The generator sheet storage is full!");
+					return;
+				}
+				amountTransfered = stackable.ServerCombine(handStackable);
+			}
+			else
+			{
+				amountTransfered = handStackable.Amount;
+				Inventory.ServerTransfer(interaction.HandSlot, itemSlot);
+			}
+			Chat.AddExamineMsgFromServer(interaction.Performer, $"You fill the generator sheet storage with {amountTransfered.ToString()} more.");
 		}
-
-		if (isSecured)
+		else if (securable.IsAnchored)
 		{
-			UpdateServerState(!isOn);
+			if (!isOn)
+			{
+				if (!TryToggleOn())
+				{
+					Chat.AddWarningMsgFromServer(interaction.Performer, $"The generator needs more fuel!");
+				}
+			}
+			else
+			{
+				ToggleOff();
+			}
 		}
 	}
+
+	#endregion Interaction
+
+	void UpdateMe()
+	{
+		fuelAmount -= Time.deltaTime * plasmaConsumptionRate;
+		if (fuelAmount <= 0)
+		{
+			ConsumeSheet();
+		}
+	}
+
+	private void ConsumeSheet()
+	{
+		if (Inventory.ServerConsume(itemSlot, 1))
+		{
+			fuelAmount += fuelPerSheet;
+		}
+		else
+		{
+			ToggleOff();
+		}
+	}
+	private bool TryToggleOn()
+	{
+		if (fuelAmount > 0 || itemSlot.Item)
+		{
+			ToggleOn();
+			return true;
+		}
+		return false;
+	}
+
+	private bool HasFuel()
+	{
+		if (fuelAmount > 0 || itemSlot.Item)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	private void ToggleOn()
+	{
+		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
+		electricalNodeControl.TurnOnSupply();
+		baseSpriteHandler.ChangeSprite((int)SpriteState.On);
+		isOn = true;
+	}
+
+	private void ToggleOff()
+	{
+		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
+		electricalNodeControl.TurnOffSupply();
+		baseSpriteHandler.ChangeSprite((int)SpriteState.Off);
+		isOn = false;
+	}
+
+	void OnDisable()
+	{
+		if (isOn)
+		{
+			ToggleOff();
+		}
+	}
+
 }

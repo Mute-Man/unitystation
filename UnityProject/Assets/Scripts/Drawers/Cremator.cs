@@ -74,7 +74,7 @@ public class Cremator : Drawer, IRightClickable, ICheckedInteractable<ContextMen
 
 	#region Server Only
 
-	protected override void CloseDrawer()
+	public override void CloseDrawer()
 	{
 		base.CloseDrawer();
 		// Note: the sprite setting done in base.CloseDrawer() would be overridden (an unnecessary sprite call).
@@ -87,16 +87,16 @@ public class Cremator : Drawer, IRightClickable, ICheckedInteractable<ContextMen
 	{
 		if (serverHeldItems.Count > 0 || serverHeldPlayers.Count > 0)
 		{
-			drawerState = (DrawerState)CrematorState.ShutWithContents;
+			SetDrawerState((DrawerState)CrematorState.ShutWithContents);
 		}
-		else drawerState = DrawerState.Shut;
+		else SetDrawerState(DrawerState.Shut);
 	}
 
 	private void Cremate()
 	{
 		OnStartPlayerCremation();
 		StartCoroutine(PlayIncineratingAnim());
-		SoundManager.PlayNetworkedAtPos("Ding", DrawerWorldPosition, sourceObj: gameObject);
+		SoundManager.PlayNetworkedAtPos("Microwave", DrawerWorldPosition, sourceObj: gameObject);
 		DestroyItems();
 	}
 
@@ -145,7 +145,7 @@ public class Cremator : Drawer, IRightClickable, ICheckedInteractable<ContextMen
 
 	private IEnumerator PlayIncineratingAnim()
 	{
-		drawerState = (DrawerState)CrematorState.ShutAndActive;
+		SetDrawerState((DrawerState)CrematorState.ShutAndActive);
 		yield return WaitFor.Seconds(BURNING_DURATION);
 		OnFinishPlayerCremation();
 		UpdateCloseState();

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mirror;
 
 namespace Disposals
 {
@@ -11,33 +10,31 @@ namespace Disposals
 		const float ANIMATION_TIME = 4.2f; // As per sprite sheet JSON file.
 		const float EJECTION_DELAY = 3;
 
-		[SyncVar(hook = nameof(OnSyncOutletState))]
-		bool outletOperating = false;
-		[SyncVar(hook = nameof(OnSyncOrientation))]
-		Orientation orientation;
-
+		Directional directional;
 		List<DisposalVirtualContainer> receivedContainers = new List<DisposalVirtualContainer>();
 
-		public bool OutletOperating => outletOperating;
+		public bool IsOperating { get; private set; }
 		public bool ServerHasContainers => receivedContainers.Count > 0;
 
-		#region Initialisation
+		private enum SpriteState
+		{
+			Idle = 0,
+			Operating = 1
+		}
+
+		#region Lifecycle
 
 		protected override void Awake()
 		{
 			base.Awake();
 
-			if (TryGetComponent(out Directional directional))
-			{
-				orientation = directional.InitialOrientation;
-				directional.OnDirectionChange.AddListener(OnDirectionChanged);
-			}
+			directional = GetComponent<Directional>();
 		}
 
-		public override void OnStartClient()
+		void Start()
 		{
-			base.OnStartClient();
-			UpdateSpriteOutletState();
+			directional.OnDirectionChange.AddListener(OnDirectionChanged);
+			UpdateSpriteState();
 			UpdateSpriteOrientation();
 		}
 
@@ -49,40 +46,36 @@ namespace Disposals
 			}
 		}
 
-		#endregion Initialisation
+		#endregion Lifecycle
 
 		void OnDirectionChanged(Orientation newDir)
 		{
-			orientation = newDir;
-		}
-
-		#region Sync
-
-		void OnSyncOutletState(bool oldState, bool newState)
-		{
-			outletOperating = newState;
-			UpdateSpriteOutletState();
-		}
-
-		void OnSyncOrientation(Orientation oldState, Orientation newState)
-		{
-			orientation = newState;
 			UpdateSpriteOrientation();
 		}
 
-		#endregion Sync
+		void SetOutletOperating(bool isOperating)
+		{
+			IsOperating = isOperating;
+			UpdateSpriteState();
+		}
 
 		#region Sprites
 
-		void UpdateSpriteOutletState()
+		void UpdateSpriteState()
 		{
-			if (OutletOperating) baseSpriteHandler.ChangeSprite(1);
-			else baseSpriteHandler.ChangeSprite(0);
+			if (IsOperating)
+			{
+				baseSpriteHandler.ChangeSprite((int) SpriteState.Operating);
+			}
+			else
+			{
+				baseSpriteHandler.ChangeSprite((int) SpriteState.Idle);
+			}
 		}
 
 		void UpdateSpriteOrientation()
 		{
-			switch (orientation.AsEnum())
+			switch (directional.CurrentDirection.AsEnum())
 			{
 				case OrientationEnum.Up:
 					baseSpriteHandler.ChangeSpriteVariant(1);
@@ -108,7 +101,7 @@ namespace Disposals
 			string baseString = "It";
 			if (FloorPlatingExposed()) baseString = base.Examine().TrimEnd('.') + " and";
 
-			if (OutletOperating) return $"{baseString} is currently ejecting its contents.";
+			if (IsOperating) return $"{baseString} is currently ejecting its contents.";
 			else return $"{baseString} is ready for use.";
 		}
 
@@ -132,7 +125,7 @@ namespace Disposals
 		{
 			receivedContainers.Add(virtualContainer);
 			virtualContainer.GetComponent<ObjectBehaviour>().parentContainer = objectBehaviour;
-			if (!OutletOperating) StartCoroutine(RunEjectionSequence());
+			if (!IsOperating) StartCoroutine(RunEjectionSequence());
 		}
 
 		IEnumerator RunEjectionSequence()
@@ -141,21 +134,21 @@ namespace Disposals
 			while (ServerHasContainers)
 			{
 				// Outlet orifice opens...
-				outletOperating = true;
+				SetOutletOperating(true);
 				SoundManager.PlayNetworkedAtPos("DisposalMachineBuzzer", registerObject.WorldPositionServer, sourceObj: gameObject);
 				yield return WaitFor.Seconds(EJECTION_DELAY);
 
 				// Outlet orifice open. Release the charge.
 				foreach (DisposalVirtualContainer container in receivedContainers)
 				{
-					container.EjectContentsAndThrow(orientation.Vector);
+					container.EjectContentsAndThrow(directional.CurrentDirection.Vector);
 					Despawn.ServerSingle(container.gameObject);
 				}
 				receivedContainers.Clear();
 
 				// Close orifice, restore charge (containers may be received during this period).
 				yield return WaitFor.Seconds(ANIMATION_TIME - EJECTION_DELAY);
-				outletOperating = false;
+				SetOutletOperating(false);
 			}
 		}
 	}

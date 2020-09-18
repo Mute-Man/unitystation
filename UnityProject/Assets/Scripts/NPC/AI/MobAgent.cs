@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Initialisation;
+using UnityEngine;
 using MLAgents;
 
 /// <summary>
@@ -39,6 +40,7 @@ public class MobAgent : Agent
 		agentParameters.onDemandDecision = true;
 	}
 
+
 	//Reset is used mainly for training
 	//SetPosition() has now been commented out
 	//as it was used in training. Leaving the
@@ -62,7 +64,7 @@ public class MobAgent : Agent
 		tickWait = 0f;
 	}
 
-	public void Start()
+	public virtual void Start()
 	{
 		//only needed for starting via a map scene through the editor:
 		if (CustomNetworkManager.Instance == null) return;

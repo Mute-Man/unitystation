@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using Mirror;
 using System.Collections.Generic;
+using ScriptableObjects;
+using NUnit.Framework;
 
 public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 {
@@ -38,6 +40,8 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 	[SerializeField] private Sprite weldSprite = null;
 
 	public bool IsWeldable => (weldOverlay != null);
+
+	public bool isEmagged;
 
 	public DoorType doorType;
 
@@ -272,6 +276,8 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 
 	public void TryClose()
 	{
+		if (isEmagged) return;
+
 		if (Time.time < delayStartTimeTryOpen + inputDelay) return;
 
 		delayStartTimeTryOpen = Time.time;
@@ -313,7 +319,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 	}
 	public void MobTryOpen(GameObject originator)
 	{
-		if (AccessRestrictions != null)
+		if (AccessRestrictions != null && !isEmagged)
 		{
 			if (!AccessRestrictions.CheckAccess(originator))
 			{
@@ -332,7 +338,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 			}
 		}
 
-		if (isHackable)
+		if (isHackable && !isEmagged)
 		{
 			hackingProcess.SendOutputToConnectedNodes(HackingIdentifier.OnShouldOpen, originator);
 		}
@@ -349,7 +355,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 
 	public void TryOpen(GameObject originator = null, bool blockClosing = false)
 	{
-		if (Time.time < delayStartTimeTryOpen + inputDelay) return;
+		if (Time.time < delayStartTimeTryOpen + inputDelay && !isEmagged) return;
 
 		delayStartTimeTryOpen = Time.time;
 
@@ -361,7 +367,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 		}
 		if (IsClosed && !isPerformingAction)
 		{
-			if (!pressureWarnActive && DoorUnderPressure())
+			if (!pressureWarnActive && DoorUnderPressure() && !isEmagged)
 			{
 				if (isHackable)
 				{
@@ -564,7 +570,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 	private void ServerElectrocute(GameObject obj)
 	{
 		float r = UnityEngine.Random.value;
-		if (r < 0.45)
+		if (r < 0.45) //TODO: Magic number, needs to be fixed.
 		{
 			PlayerScript ply = obj.GetComponent<PlayerScript>();
 			if (ply != null)
@@ -572,7 +578,7 @@ public class DoorController : NetworkBehaviour, IServerSpawn, ISetMultitoolSlave
 				hackingProcess.HackingGUI.RemovePlayer(ply.gameObject);
 				TabUpdateMessage.Send(ply.gameObject, hackingProcess.HackingGUI.Provider, NetTabType.HackingPanel, TabAction.Close);
 				var playerLHB = obj.GetComponent<LivingHealthBehaviour>();
-				var electrocution = new Electrocution(9080, registerTile.WorldPositionServer, "wire");
+				var electrocution = new Electrocution(9080, registerTile.WorldPositionServer, "wire"); //More magic numbers.
 				if (playerLHB != null) playerLHB.Electrocute(electrocution);
 			}
 		}

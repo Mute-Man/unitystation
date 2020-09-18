@@ -1,9 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace InGameEvents
 {
+	/// <summary>
+	/// Type of page for extra event parameters
+	/// </summary>
+	public enum ParametersPageType
+	{
+		None,
+		Sickness,
+	}
+
 	/// <summary>
 	/// The base script that events can be inherited from.
 	///
@@ -43,6 +50,11 @@ namespace InGameEvents
 		public int MinPlayersToTrigger = 0;
 
 		/// <summary>
+		/// The type of extra parameters customization page
+		/// </summary>
+		public ParametersPageType parametersPageType = ParametersPageType.None;
+
+		/// <summary>
 		/// If the event is fake, you'll need to integrate into own script
 		/// </summary>
 		[HideInInspector]
@@ -56,18 +68,23 @@ namespace InGameEvents
 
 		private void Start()
 		{
-			if (InGameEventsManager.Instance.ListOfFunEventScripts.Contains(this)) return;
 			InGameEventsManager.Instance.AddEventToList(this, EventType);
 		}
 
 		private void OnDestroy()
 		{
-			InGameEventsManager.Instance.ListOfFunEventScripts.Remove(this);
+			InGameEventsManager.Instance.RemoveEventFromList(this, EventType);
+			CancelInvoke();
 		}
 
 		public virtual void OnEventStart()
 		{
 			Invoke(nameof(OnEventStartTimed), StartTimer);
+		}
+
+		public virtual void OnEventStart(string serializedEventParameters = null)
+		{
+			OnEventStart();
 		}
 
 		public virtual void OnEventStartTimed()
@@ -85,9 +102,9 @@ namespace InGameEvents
 
 		}
 
-		public void TriggerEvent()
+		public void TriggerEvent(string serializedEventParameters = null)
 		{
-			OnEventStart();
+			OnEventStart(serializedEventParameters);
 		}
 	}
 

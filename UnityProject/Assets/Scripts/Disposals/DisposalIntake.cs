@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Mirror;
 
 namespace Disposals
 {
@@ -13,18 +12,17 @@ namespace Disposals
 		const float FLUSH_DELAY = 1;
 
 		DirectionalPassable directionalPassable;
-
-		[SyncVar(hook = nameof(OnSyncIntakeState))]
-		bool intakeOperating = false;
-		[SyncVar(hook = nameof(OnSyncOrientation))]
-		OrientationEnum orientation;
-
-		Coroutine intakeSequence;
 		DisposalVirtualContainer virtualContainer;
 
-		public bool IntakeOperating => intakeOperating;
+		public bool IsOperating { get; private set; }
 
-		#region Initialisation
+		private enum SpriteState
+		{
+			Idle = 0,
+			Operating = 1
+		}
+
+		#region Lifecycle
 
 		protected override void Awake()
 		{
@@ -32,17 +30,14 @@ namespace Disposals
 
 			if (TryGetComponent(out Directional directional))
 			{
-				orientation = directional.InitialDirection;
 				directional.OnDirectionChange.AddListener(OnDirectionChanged);
 			}
 			directionalPassable = GetComponent<DirectionalPassable>();
 			DenyEntry();
 		}
 
-		public override void OnStartClient()
+		void Start()
 		{
-			base.OnStartClient();
-			UpdateSpriteOutletState();
 			UpdateSpriteOrientation();
 		}
 
@@ -51,49 +46,45 @@ namespace Disposals
 			if (virtualContainer != null) Despawn.ServerSingle(virtualContainer.gameObject);
 		}
 
-		#endregion Initialisation
+		#endregion Lifecycle
 
 		// Woman! I can hardly express
 		// My mixed motions at my thoughtlessness
 		// TODO: Don't poll, find some sort of trigger for when an entity enters the same tile.
 		void UpdateMe()
 		{
-			if (!MachineSecured || IntakeOperating) return;
+			if (!MachineSecured || IsOperating) return;
 			GatherEntities();
 		}
 
 		private void OnDirectionChanged(Orientation newDir)
 		{
-			orientation = newDir.AsEnum();
-		}
-
-		#region Sync
-
-		void OnSyncIntakeState(bool oldState, bool newState)
-		{
-			intakeOperating = newState;
-			UpdateSpriteOutletState();
-		}
-
-		void OnSyncOrientation(OrientationEnum oldState, OrientationEnum newState)
-		{
-			orientation = newState;
 			UpdateSpriteOrientation();
 		}
 
-		#endregion Sync
+		void SetIntakeOperating(bool isOperating)
+		{
+			IsOperating = isOperating;
+			UpdateSpriteState();
+		}
 
 		#region Sprites
 
-		void UpdateSpriteOutletState()
+		void UpdateSpriteState()
 		{
-			if (IntakeOperating) baseSpriteHandler.ChangeSprite(1);
-			else baseSpriteHandler.ChangeSprite(0);
+			if (IsOperating)
+			{
+				baseSpriteHandler.ChangeSprite((int) SpriteState.Operating);
+			}
+			else
+			{
+				baseSpriteHandler.ChangeSprite((int) SpriteState.Idle);
+			}
 		}
 
 		void UpdateSpriteOrientation()
 		{
-			switch (orientation)
+			switch (directionalPassable.Directional.CurrentDirection.AsEnum())
 			{
 				case OrientationEnum.Up:
 					baseSpriteHandler.ChangeSpriteVariant(1);
@@ -119,7 +110,7 @@ namespace Disposals
 			string baseString = "It";
 			if (FloorPlatingExposed()) baseString = base.Examine().TrimEnd('.') + " and";
 
-			if (IntakeOperating) return $"{baseString} is currently flushing its contents.";
+			if (IsOperating) return $"{baseString} is currently flushing its contents.";
 			else return $"{baseString} is ready for use.";
 		}
 
@@ -151,7 +142,7 @@ namespace Disposals
 		IEnumerator RunIntakeSequence()
 		{
 			// Intake orifice closes...
-			intakeOperating = true;
+			SetIntakeOperating(true);
 			DenyEntry();
 			virtualContainer = SpawnNewContainer();
 			yield return WaitFor.Seconds(FLUSH_DELAY);
@@ -164,7 +155,7 @@ namespace Disposals
 			yield return WaitFor.Seconds(ANIMATION_TIME - FLUSH_DELAY);
 			virtualContainer = null;
 			AllowEntry();
-			intakeOperating = false;
+			SetIntakeOperating(false);
 		}
 
 		#region Construction

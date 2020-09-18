@@ -16,7 +16,6 @@ public delegate void OnClothingEquippedDelegate(ClothingV2 clothing, bool isEqui
 [RequireComponent(typeof(SpriteRenderer))]
 public class ClothingItem : MonoBehaviour
 {
-
 	[Tooltip("Slot this clothing item is equipped to.")]
 	public NamedSlot Slot;
 
@@ -39,7 +38,7 @@ public class ClothingItem : MonoBehaviour
 	/// <summary>
 	/// Player equipped or unequipped some clothing from ClothingItem slot
 	/// </summary>
-	public event OnClothingEquippedDelegate OnClothingEquiped;
+	public event OnClothingEquippedDelegate OnClothingEquipped;
 
 	/// <summary>
 	/// Direction clothing is facing (absolute)
@@ -59,10 +58,7 @@ public class ClothingItem : MonoBehaviour
 	/// </summary>
 	private bool InHands
 	{
-		get
-		{
-			return spriteType == SpriteHandType.RightHand || spriteType == SpriteHandType.LeftHand;
-		}
+		get { return spriteType == SpriteHandType.RightHand || spriteType == SpriteHandType.LeftHand; }
 	}
 
 	private void Awake()
@@ -83,18 +79,21 @@ public class ClothingItem : MonoBehaviour
 		UpdateReferenceOffset();
 		if (Item == null)
 		{
-			if (spriteHandler != null) //need to remove
+			if (spriteHandler != null)
 			{
-				spriteHandler.spriteData = null;
-				PushTexture();
+				spriteHandler.Empty();
 			}
 
 			if (!InHands && GameObjectReference != null)
 			{
 				// did we take off clothing?
 				var unequippedClothing = GameObjectReference.GetComponent<ClothingV2>();
+
+				// Unhide the players's slots defined in the clothing's HiddenSlots, as we're removing it.
+				thisPlayerScript.Equipment.obscuredSlots &= ~unequippedClothing.HiddenSlots;
+
 				if (unequippedClothing)
-					OnClothingEquiped?.Invoke(unequippedClothing, false);
+					OnClothingEquipped?.Invoke(unequippedClothing, false);
 			}
 
 			GameObjectReference = null; // Remove the item from equipment
@@ -115,12 +114,15 @@ public class ClothingItem : MonoBehaviour
 				var equippedClothing = Item.GetComponent<ClothingV2>();
 				equippedClothing?.LinkClothingItem(this);
 
+				// Set the slots defined in hidesSlots as hidden.
+				thisPlayerScript.Equipment.obscuredSlots |= equippedClothing.HiddenSlots;
+
 				// Some items like trash bags / mining satchels can be equipped but are not clothing and do not show on character sprite
-				// But for the others, we call the OnClothingEquiped event.
+				// But for the others, we call the OnClothingEquipped event.
 				if (equippedClothing)
 				{
 					// call the event of equiped clothing
-					OnClothingEquiped?.Invoke(equippedClothing, true);
+					OnClothingEquipped?.Invoke(equippedClothing, true);
 				}
 			}
 		}
@@ -130,15 +132,15 @@ public class ClothingItem : MonoBehaviour
 
 	public void RefreshFromClothing(ClothingV2 clothing)
 	{
-		spriteHandler.spriteData = clothing.SpriteInfo;
-
+		spriteHandler.SetCatalogue(clothing.SpriteDataSO);
+		spriteHandler.ChangeSprite(clothing.SpriteInfoState);
 		List<Color> palette = clothing.GetComponent<ItemAttributesV2>()?.ItemSprites?.Palette;
 		if (palette != null)
 		{
-			spriteHandler.SetPaletteOfCurrentSprite(palette);
+			spriteHandler.SetPaletteOfCurrentSprite(palette,  Network:false);
 		}
 
-		spriteHandler.ChangeSprite(clothing.SpriteInfoState);
+
 		PushTexture();
 	}
 
@@ -163,6 +165,7 @@ public class ClothingItem : MonoBehaviour
 		{
 			referenceOffset = 3;
 		}
+
 		UpdateSprite();
 	}
 
@@ -170,10 +173,7 @@ public class ClothingItem : MonoBehaviour
 	{
 		if (spriteHandler != null)
 		{
-			if (spriteHandler.spriteData != null)
-			{
-				spriteHandler.ChangeSpriteVariant(referenceOffset);
-			}
+			spriteHandler.ChangeSpriteVariant(referenceOffset, false);
 		}
 	}
 
@@ -181,27 +181,24 @@ public class ClothingItem : MonoBehaviour
 	{
 		if (spriteHandler != null)
 		{
-			spriteHandler.PushTexture();
+			spriteHandler.PushTexture(false);
 		}
 	}
 
-	public void SetInHand(ItemsSprites _ItemsSprites) {
+	public void SetInHand(ItemsSprites _ItemsSprites)
+	{
 		if (_ItemsSprites != null)
 		{
 			if (spriteType == SpriteHandType.RightHand)
 			{
-
-				spriteHandler.spriteData = _ItemsSprites.RightHand.Data;
+				spriteHandler.SetSpriteSO(_ItemsSprites.SpriteRightHand,Network: false);
 			}
 			else
 			{
-				spriteHandler.spriteData = _ItemsSprites.LeftHand.Data;
+				spriteHandler.SetSpriteSO(_ItemsSprites.SpriteLeftHand, Network:false);
 			}
 
-			spriteHandler.spriteData.isPaletteds = new List<bool>() { _ItemsSprites.IsPaletted };
-			spriteHandler.spriteData.palettes = new List<List<Color>>() { new List<Color>(_ItemsSprites.Palette) };
-
-			PushTexture();
+			spriteHandler.SetPaletteOfCurrentSprite(_ItemsSprites.Palette,  Network:false);
 		}
 	}
 }

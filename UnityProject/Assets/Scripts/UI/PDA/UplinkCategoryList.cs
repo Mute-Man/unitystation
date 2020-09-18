@@ -1,41 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
+using ScriptableObjects;
 using UnityEngine;
 
 	[CreateAssetMenu(fileName = "UplinkItemList", menuName = "ScriptableObjects/PDA/UplinkItemList")]
 	public class UplinkCategoryList : SingletonScriptableObject<UplinkCategoryList>
 	{
 		[SerializeField] [Tooltip("A list of Item categories.")]
-		private List<UplinkCatagories> itemCategoryList = new List<UplinkCatagories>();
+		private List<UplinkCategory> itemCategoryList = new List<UplinkCategory>();
 
-		public List<UplinkCatagories> ItemCategoryList => itemCategoryList;
+		public List<UplinkCategory> ItemCategoryList => itemCategoryList;
 	}
 
 	[Serializable]
-	public class UplinkCatagories
+	public class UplinkCategory
 	{
 		[SerializeField] [Tooltip("The name of the category for each uplink Item")]
-		private string categoryName;
+		private string categoryName = "";
 
 		[SerializeField] [Tooltip("The list of products in the category")]
-		private List<UplinkItems> itemList = new List<UplinkItems>();
+		private List<UplinkItem> itemList = new List<UplinkItem>();
 
 		public string CategoryName => categoryName;
 
-		public List<UplinkItems> ItemList => itemList;
+		public List<UplinkItem> ItemList => itemList;
+
+		public override string ToString()
+		{
+			return $"UplinkCategory: {CategoryName} ({ItemList.Count} items)";
+		}
 	}
 
 	[Serializable]
-	public class UplinkItems
+	public class UplinkItem
 	{
 		[SerializeField] [Tooltip("Item TC cost")]
-		private int cost;
+		private int cost = 1;
 
 		[SerializeField] [Tooltip("The prefab for the item")]
-		private GameObject item;
+		private GameObject item = null;
 
 		[SerializeField] [Tooltip("Item Name")]
-		private string name;
+		private string name = "";
 
 		public string Name => name;
 

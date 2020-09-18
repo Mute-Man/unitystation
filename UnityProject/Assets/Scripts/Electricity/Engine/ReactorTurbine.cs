@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using ScriptableObjects;
 using UnityEngine;
 
 public class ReactorTurbine : MonoBehaviour, INodeControl, ISetMultitoolSlave, ISetMultitoolMaster, IServerDespawn, ICheckedInteractable<HandApply>
 {
-	[SerializeField] private float tickRate = 1;
 	private float tickCount;
 
 	public ModuleSupplyingDevice moduleSupplyingDevice;

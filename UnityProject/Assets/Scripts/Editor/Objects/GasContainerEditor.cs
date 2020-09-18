@@ -1,8 +1,8 @@
 using System.Linq;
 using Atmospherics;
-using Objects;
 using UnityEditor;
 using UnityEngine;
+using Objects.GasContainer;
 
 [CustomEditor(typeof(GasContainer))]
 public class GasContainerEditor : Editor
@@ -102,13 +102,11 @@ public class GasContainerEditor : Editor
 			EditorGUILayout.LabelField(label);
 		}
 
-		EditorGUI.indentLevel++;
 		foreach (Gas gas in Gas.All)
 		{
 			result[gas] = EditorGUILayout.FloatField(gas.Name, values[gas]);
 		}
 
-		EditorGUI.indentLevel--;
 
 		return result;
 	}

@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Pipes;
 using UnityEngine;
+using Pipes;
+using ScriptableObjects;
 
 namespace Pipes
 {
@@ -13,8 +14,7 @@ namespace Pipes
 		public int UnitPerTick = 100;
 		public int PowerPercentage = 100;
 
-
-		public void Start()
+		public override void Start()
 		{
 			pipeData.PipeAction = new WaterPumpAction();
 			base.Start();
@@ -22,33 +22,44 @@ namespace Pipes
 
 		public override void TickUpdate()
 		{
-			float AvailableReagents = 0;
+			Vector2 AvailableReagents = new Vector2(0f,0f);
 			foreach (var Pipe in pipeData.ConnectedPipes)
 			{
 				if (pipeData.Outputs.Contains(Pipe) == false && CanEqualiseWithThis( Pipe))
 				{
 					var Data = PipeFunctions.PipeOrNet(Pipe);
-					AvailableReagents += Data.Mix.Total;
+					AvailableReagents += Data.Total;
 				}
 			}
 
-			float TotalRemove = 0;
-			if ((UnitPerTick * PowerPercentage) > AvailableReagents)
+			Vector2 TotalRemove = Vector2.zero;
+			if ((UnitPerTick * PowerPercentage) > AvailableReagents.x)
 			{
-				TotalRemove = AvailableReagents;
+				TotalRemove.x = AvailableReagents.x;
 			}
 			else
 			{
-				TotalRemove = (UnitPerTick * PowerPercentage);
+				TotalRemove.x =  (UnitPerTick * PowerPercentage);
 			}
+
+			if ((UnitPerTick * PowerPercentage) > AvailableReagents.y)
+			{
+				TotalRemove.y = AvailableReagents.y;
+			}
+			else
+			{
+				TotalRemove.y =  (UnitPerTick * PowerPercentage);
+			}
+
 
 			foreach (var Pipe in pipeData.ConnectedPipes)
 			{
 				if (pipeData.Outputs.Contains(Pipe) == false && CanEqualiseWithThis(Pipe))
 				{
+					//TransferTo
 					var Data = PipeFunctions.PipeOrNet(Pipe);
-					Data.Mix.TransferTo(pipeData.mixAndVolume.Mix,
-						(Data.Mix.Total / AvailableReagents) * TotalRemove);
+					Data.TransferTo(pipeData.mixAndVolume,
+						(Data.Total / AvailableReagents) * TotalRemove);
 				}
 			}
 
@@ -65,7 +76,7 @@ namespace Pipes
 			return true;
 		}
 
-		public bool WillInteract( HandApply interaction, NetworkSide side )
+		public override bool WillInteract(HandApply interaction, NetworkSide side )
 		{
 
 			if (!DefaultWillInteract.Default(interaction, side)) return false;
@@ -74,7 +85,7 @@ namespace Pipes
 			return true;
 		}
 
-		public void ServerPerformInteraction(HandApply interaction)
+		public override void ServerPerformInteraction(HandApply interaction)
 		{
 			if (Validations.HasItemTrait(interaction.UsedObject, CommonTraits.Instance.Welder))
 			{
@@ -98,9 +109,5 @@ namespace Pipes
 			base.OnDespawnServer(info);
 			Spawn.ServerPrefab(CommonPrefabs.Instance.Metal, this.GetComponent<RegisterObject>().WorldPositionServer, count: 25 );
 		}
-
-
 	}
-
-
 }

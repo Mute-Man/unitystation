@@ -94,12 +94,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db025f3627a11af4fb670ccd1e2188ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spriteData:
-    isPaletteds: 
-  Sprites: []
-  spriteIndex: 0
+  NetworkThis: 1
+  SubCatalogue:
+  - {fileID: 11400000, guid: cda6abfa9bb53374d879e5d536a40fe5, type: 2}
+  PresentSpriteSet: {fileID: 11400000, guid: cda6abfa9bb53374d879e5d536a40fe5, type: 2}
   variantIndex: 0
-  SetSpriteOnStartUp: 0
+  palette: []
+  Sprites: []
+--- !u!114 &-735950409198653472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8783702771992860667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f1c39b1f85624448b81a30f8c44e137, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sides: 6
+  riggable: 1
+--- !u!114 &2517326105594482239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8783702771992860667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85f61ef9334eff448b907d2bf379cb03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CookTime: 15
+  CookedProduct: {fileID: 0}
 --- !u!1001 &8783827724552596289
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -222,8 +251,30 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 584176e3e18c57944bf5b52de893ba84,
         type: 2}
+    - target: {fileID: 499351249353511896, guid: a7abba22164ce49f0bf9b9b219f39298,
+        type: 3}
+      propertyPath: itemSprites.SpriteLeftHand
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 499351249353511896, guid: a7abba22164ce49f0bf9b9b219f39298,
+        type: 3}
+      propertyPath: itemSprites.SpriteRightHand
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6144467708197095229, guid: a7abba22164ce49f0bf9b9b219f39298,
+        type: 3}
+      propertyPath: PresentSpriteSet
+      value: 
+      objectReference: {fileID: 11400000, guid: e4c45d165bdecef41b245ab0860d3a4d,
+        type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a7abba22164ce49f0bf9b9b219f39298, type: 3}
+--- !u!1 &8783702771992860667 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1011433845357754, guid: a7abba22164ce49f0bf9b9b219f39298,
+    type: 3}
+  m_PrefabInstance: {fileID: 8783827724552596289}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8788344772610484879 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4527534762131918, guid: a7abba22164ce49f0bf9b9b219f39298,

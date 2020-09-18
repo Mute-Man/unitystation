@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Mirror;
-using System.Collections.Generic;
-using YamlDotNet.Samples;
-using UnityEngine.Events;
+using ScriptableObjects.Hacking;
 
 /// <summary>
-/// This is a controller for hacking an object. This compoenent being attached to an object means that the object is hackable.
+/// This is a controller for hacking an object. This component being attached to an object means that the object is hackable.
 /// It will check interactions with the object, and once the goal interactions have been met, it will open a hacking UI prefab.
 /// e.g. check if interacted with a screw driver, then check if
 /// </summary>
 [RequireComponent(typeof(ItemStorage))]
-public abstract class HackingProcessBase : NetworkBehaviour, IPredictedCheckedInteractable<HandApply>, IServerSpawn, IServerDespawn
+public abstract class HackingProcessBase : NetworkBehaviour, IPredictedCheckedInteractable<HandApply>, IServerDespawn
 {
 	[SerializeField]
 	[Tooltip("Whether the wires used to hack the object are initially exposed when the object is spawned.")]
@@ -68,7 +67,7 @@ public abstract class HackingProcessBase : NetworkBehaviour, IPredictedCheckedIn
 		SyncWiresExposed(wiresExposed, wiresExposed);
 	}
 
-	public void OnSpawnServer(SpawnInfo info)
+	public override void OnStartServer()
 	{
 		itemStorage = GetComponent<ItemStorage>();
 		ServerGenerateNodesFromNodeInfo();

@@ -106,7 +106,7 @@ using UnityEditor;
 			{
 				StartCoroutine(PlayAnim(overlay_Glass, overlaySprites, doorController.DoorCoverSpriteOffset, skipToEnd: skipAnimation));
 			}
-			
+
 			//mabe the boxColliderStuff should be on the DoorController.
 			StartCoroutine(MakePassable(skipAnimation));
 		}
@@ -165,7 +165,7 @@ using UnityEditor;
 			{
 				StartCoroutine(PlayAnim(overlay_Glass, overlaySprites, doorController.DoorCoverSpriteOffset + 6, skipToEnd: skipAnimation));
 			}
-			
+
 			StartCoroutine(MakeSolid(skipAnimation));
 		}
 
@@ -195,7 +195,8 @@ using UnityEditor;
 		{
 			if (offset > -1 && numberOfSpritesToPlay > 0)
 			{
-				int limit = offset + numberOfSpritesToPlay;
+				// clamp to make sure that index is not out of range
+				int limit = Mathf.Clamp(offset + numberOfSpritesToPlay, 0, list.Length-1);
 				if (skipToEnd)
 				{
 					renderer.sprite = list[limit - 1];

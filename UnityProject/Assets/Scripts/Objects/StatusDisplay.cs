@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using ScriptableObjects;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -10,14 +11,15 @@ using UnityEngine.UI;
 /// Mounted monitor to show simple images or text
 /// Escape Shuttle channel is a priority one and will overtake other channels.
 /// </summary>
-public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<HandApply>, ISetMultitoolMaster
+public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInteractable<HandApply>, ISetMultitoolMaster,
+		IRightClickable, ICheckedInteractable<ContextMenuApply>
 {
 	public static readonly int MAX_CHARS_PER_PAGE = 18;
 
 	private Coroutine blinkHandle;
 
 	[SerializeField]
-	private Text textField;
+	private Text textField = default;
 
 	[SyncVar(hook = nameof(SyncSprite))] public MountedMonitorState stateSync;
 	[SyncVar(hook = nameof(SyncStatusText))] private string statusText = string.Empty;
@@ -28,7 +30,7 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 	public Sprite openEmpty;
 	public Sprite openCabled;
 	public Sprite closedOff;
-	public SpriteSheetAndData joeNews;
+	public SpriteDataSO joeNews;
 	public List<DoorController> doorControllers = new List<DoorController>();
 	public CentComm centComm;
 	public int currentTimerSeconds;
@@ -268,7 +270,6 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 		this.StartCoroutine( BlinkText(), ref blinkHandle);
 	}
 
-
 	private void OnTextBroadcastReceived(StatusDisplayChannel broadcastedChannel)
 	{
 		if (broadcastedChannel == StatusDisplayChannel.DoorTimer)
@@ -365,7 +366,7 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 			DisplaySpriteHandler.SetSprite(null);
 		}else if (stateNew == MountedMonitorState.Image)
 		{
-			DisplaySpriteHandler.SetSprite(joeNews, 0);
+			DisplaySpriteHandler.SetSpriteSO(joeNews);
 			this.TryStopCoroutine( ref blinkHandle );
 			textField.text = "";
 		}
@@ -385,6 +386,62 @@ public class StatusDisplay : NetworkBehaviour, IServerLifecycle, ICheckedInterac
 			MonitorSpriteHandler.SetSprite(openEmpty);
 		}
 	}
+
+	#region Interaction-ContextMenu
+
+	public RightClickableResult GenerateRightClickOptions()
+	{
+		var result = RightClickableResult.Create();
+
+		if (!WillInteract(ContextMenuApply.ByLocalPlayer(gameObject, null), NetworkSide.Client)) return result;
+
+		var stopTimerInteraction = ContextMenuApply.ByLocalPlayer(gameObject, "StopTimer");
+		result.AddElement("Stop Timer", () => ContextMenuOptionClicked(stopTimerInteraction));
+
+		var addTimeInteraction = ContextMenuApply.ByLocalPlayer(gameObject, "AddTime");
+		result.AddElement("Add 1 Min", () => ContextMenuOptionClicked(addTimeInteraction));
+
+		var removeTimeInteraction = ContextMenuApply.ByLocalPlayer(gameObject, "RemoveTime");
+		result.AddElement("Take 1 Min", () => ContextMenuOptionClicked(removeTimeInteraction));
+
+		return result;
+	}
+
+	private void ContextMenuOptionClicked(ContextMenuApply interaction)
+	{
+		InteractionUtils.RequestInteract(interaction, this);
+	}
+
+	public bool WillInteract(ContextMenuApply interaction, NetworkSide side)
+	{
+		return DefaultWillInteract.Default(interaction, side);
+	}
+
+	public void ServerPerformInteraction(ContextMenuApply interaction)
+	{
+		switch (interaction.RequestedOption)
+		{
+			case "StopTimer":
+				currentTimerSeconds = 0;
+				break;
+			case "AddTime":
+				if (!countingDown)
+				{
+					StartCoroutine(TickTimer());
+				}
+				currentTimerSeconds += 60;
+				break;
+			case "RemoveTime":
+				currentTimerSeconds -= 60;
+				if (currentTimerSeconds < 0)
+				{
+					currentTimerSeconds = 0;
+				}
+				break;
+		}
+	}
+
+	#endregion Interaction-ContextMenu
 }
 
 public enum StatusDisplayChannel

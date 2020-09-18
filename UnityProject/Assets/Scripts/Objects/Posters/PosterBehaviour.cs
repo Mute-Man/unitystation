@@ -1,7 +1,6 @@
-
 using System.Collections.Generic;
-using Mirror;
 using UnityEngine;
+using Mirror;
 
 public class PosterBehaviour : NetworkBehaviour, ICheckedInteractable<HandApply>
 {
@@ -107,7 +106,7 @@ public class PosterBehaviour : NetworkBehaviour, ICheckedInteractable<HandApply>
 		var item = pna.GetActiveHandItem();
 		if (Validations.HasItemTrait(item, CommonTraits.Instance.Wirecutter))
 		{
-			SoundManager.PlayNetworkedAtPos("WireCutter", pos, 1f, sourceObj: gameObject);
+			ToolUtils.ServerPlayToolSound(interaction);
 
 			if (posterVariant == Posters.Ripped)
 			{
@@ -139,5 +138,3 @@ public class PosterBehaviour : NetworkBehaviour, ICheckedInteractable<HandApply>
 		SyncPosterType(posterVariant, Posters.Ripped);
 	}
 }
-
-

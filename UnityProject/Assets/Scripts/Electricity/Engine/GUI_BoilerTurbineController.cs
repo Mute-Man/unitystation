@@ -28,7 +28,7 @@ public class GUI_BoilerTurbineController : NetTab
 		}
 	}
 
-	private void OnEnable()
+	public override void OnEnable()
 	{
 		base.OnEnable();
 		if (CustomNetworkManager.Instance._isServer == false ) return;
@@ -48,7 +48,7 @@ public class GUI_BoilerTurbineController : NetTab
 			CapacityPercent = boilerTurbineController.ReactorBoiler.CurrentPressureInput /
 			                  boilerTurbineController.ReactorBoiler.MaxPressureInput;
 			BoilerTemperature.SetValueServer(Math
-				.Round((boilerTurbineController.ReactorBoiler.ReactorPipe.pipeData.mixAndVolume.Mix.Temperature /
+				.Round((boilerTurbineController.ReactorBoiler.ReactorPipe.pipeData.mixAndVolume.Temperature /
 				        12000) * 100).ToString());
 
 			BoilerPressure.SetValueServer(Math
@@ -72,11 +72,6 @@ public class GUI_BoilerTurbineController : NetTab
 		}
 
 
-	}
-
-	public void CloseTab()
-	{
-		ControlTabs.CloseTab(Type, Provider);
 	}
 
 	[System.Serializable]

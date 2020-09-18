@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using AdminCommands;
 using DatabaseAPI;
+using ScriptableObjects;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,10 +15,10 @@ namespace AdminTools
 		[SerializeField] private Button respawnBtn = null;
 		[SerializeField] private Button respawnAsBtn = null;
 		[SerializeField] private Dropdown adminJobsDropdown = null;
-		[SerializeField] private Button teleportAdminToPlayer = null;
-		[SerializeField] private Button teleportPlayerToAdmin = null;
-		[SerializeField] private Button teleportAdminToPlayerAghost = null;
-		[SerializeField] private Button teleportAllPlayersToPlayer = null;
+		[SerializeField] private Button teleportAdminToPlayer = null; // TODO: this is unused and is creating a compiler warning.
+		[SerializeField] private Button teleportPlayerToAdmin = null; // Same issue with this.
+		[SerializeField] private Button teleportAdminToPlayerAghost = null; // This too.
+		[SerializeField] private Button teleportAllPlayersToPlayer = null; // And this.
 		private AdminPlayerEntry playerEntry;
 
 		public override void OnPageRefresh(AdminPageRefreshData adminPageData)
@@ -68,6 +70,13 @@ namespace AdminTools
 			adminTools.kickBanEntryPage.SetPage(false, playerEntry.PlayerData, true);
 		}
 
+		public void OnSmiteBtn()
+		{
+			adminTools.areYouSurePage.SetAreYouSurePage(
+			$"Are you sure you want to smite {playerEntry.PlayerData.name}?",
+			SendSmitePlayerRequest);
+		}
+
 		public void OnDeputiseBtn()
 		{
 			adminTools.areYouSurePage.SetAreYouSurePage(
@@ -94,6 +103,15 @@ namespace AdminTools
 		{
 			respawnAsBtn.interactable = !playerEntry.PlayerData.isAlive &&
 			                            adminJobsDropdown.value != 0;
+		}
+
+		/// <summary>
+		/// Sends the command to smite a player
+		/// </summary>
+		void SendSmitePlayerRequest()
+		{
+			ServerCommandVersionTwoMessageClient.Send(ServerData.UserID, PlayerList.Instance.AdminToken, playerEntry.PlayerData.uid, "CmdSmitePlayer");
+			RefreshPage();
 		}
 
 		void SendMakePlayerAdminRequest()

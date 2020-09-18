@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Atmospherics;
 using Mirror;
-
+using Pipes;
 
 /// <summary>
 /// Used to monitor the fuel level and to remove fuel from the canister and also stop the shuttle if the fuel has run out
@@ -14,11 +14,11 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 	public ShuttleFuelConnector Connector;
 	public MatrixMove MatrixMove;
 	public float FuelConsumption;
-	public float massConsumption = 2.5f;
+	public float MassConsumption = 0.1f;
 
 	public float CalculatedMassConsumption;
 
-	public float OptimumMassConsumption = 0.5f;
+	public float optimumMassConsumption = 0.05f;
 
 
 	protected override void OnEnable() {
@@ -43,7 +43,7 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 			{
 				MatrixMove.IsFueled = true;
 			}
-			FuelLevel = Connector.canister.container.GasMix.GetMoles(Gas.Plasma) / 60000;
+			FuelLevel = Connector.canister.GasContainer.GasMix.GetMoles(Gas.Plasma) / 60000;
 		}
 		else
 		{
@@ -63,8 +63,8 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 
 	bool IsFuelledOptimum()
 	{
-		var Plasma = Connector.canister.container.GasMix.GetMoles(Gas.Plasma);
-		var Oxygen = Connector.canister.container.GasMix.GetMoles(Gas.Oxygen);
+		var Plasma = Connector.canister.GasContainer.GasMix.GetMoles(Gas.Plasma);
+		var Oxygen = Connector.canister.GasContainer.GasMix.GetMoles(Gas.Oxygen);
 		var Ratio = ((Plasma / Oxygen) / (7f / 3f));
 		//Logger.Log("Ratio > " + Ratio);
 		Ratio = Ratio * 2f;
@@ -84,12 +84,12 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 		//Logger.Log("Ratio2 > " + Ratio);
 
 		var CMassconsumption = 1f / Ratio;
-		if (CMassconsumption > 6)
+		if (CMassconsumption > 1)
 		{
-			CMassconsumption = 6;
+			CMassconsumption = 1;
 		}
 		//Logger.Log("Ratio3 > " + Ratio);
-		CalculatedMassConsumption = (CMassconsumption * OptimumMassConsumption * FuelConsumption);
+		CalculatedMassConsumption = (CMassconsumption * optimumMassConsumption * FuelConsumption);
 
 		if ((Plasma > (CalculatedMassConsumption)  * (0.7f)) && (Oxygen > (CalculatedMassConsumption)  * (0.3f)))
 		{
@@ -104,14 +104,14 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 	{
 		if (IsFuelledOptimum())
 		{
-			//Logger.Log("CalculatedMassConsumption > " + CalculatedMassConsumption*massConsumption);
-			Connector.canister.container.GasMix = Connector.canister.container.GasMix.RemoveGasReturn(Gas.Plasma, CalculatedMassConsumption * massConsumption  * (0.7f));
-			Connector.canister.container.GasMix = Connector.canister.container.GasMix.RemoveGasReturn(Gas.Oxygen, CalculatedMassConsumption * massConsumption  * (0.3f));
+			//Logger.Log("CalculatedMassConsumption > " + CalculatedMassConsumption*MassConsumption);
+			Connector.canister.GasContainer.GasMix = Connector.canister.GasContainer.GasMix.RemoveGasReturn(Gas.Plasma, CalculatedMassConsumption * MassConsumption  * (0.7f));
+			Connector.canister.GasContainer.GasMix = Connector.canister.GasContainer.GasMix.RemoveGasReturn(Gas.Oxygen, CalculatedMassConsumption * MassConsumption  * (0.3f));
 		}
-		else if (Connector.canister.container.GasMix.GetMoles(Gas.Plasma) > massConsumption * FuelConsumption)
+		else if (Connector.canister.GasContainer.GasMix.GetMoles(Gas.Plasma) > MassConsumption * FuelConsumption)
 		{
-			//Logger.Log("Full-back > " + (FuelConsumption * massConsumption));
-			Connector.canister.container.GasMix = Connector.canister.container.GasMix.RemoveGasReturn(Gas.Plasma, (massConsumption * FuelConsumption));
+			//Logger.Log("Full-back > " + (FuelConsumption * MassConsumption));
+			Connector.canister.GasContainer.GasMix = Connector.canister.GasContainer.GasMix.RemoveGasReturn(Gas.Plasma, (MassConsumption * FuelConsumption));
 		}
 		else {
 			MatrixMove.IsFueled = false;
@@ -124,7 +124,7 @@ public class ShuttleFuelSystem : ManagedNetworkBehaviour
 		if (IsFuelledOptimum()) {
 			return (true);
 		}
-		else if (Connector.canister.container.GasMix.GetMoles(Gas.Plasma) > massConsumption * FuelConsumption)
+		else if (Connector.canister.GasContainer.GasMix.GetMoles(Gas.Plasma) > MassConsumption * FuelConsumption)
 		{
 			return (true);
 		}

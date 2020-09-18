@@ -1,37 +1,78 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Atmospherics;
 using UnityEngine;
 using Mirror;
-using UnityEngine.Events;
-using System.Linq;
 
 public class ItemPinpointer : NetworkBehaviour, IInteractable<HandActivate>
 {
-	public GameObject rendererSprite;
-	private GameObject objectToTrack;
-	private SpriteHandler spriteHandler;
+	[SerializeField]
+	private GameObject arrowGameObject = default;
 
-	private ItemsSprites newSprites = new ItemsSprites();
-	private Pickupable pick;
-	private float timeElapsedSprite = 0;
-	private float timeElapsedIcon = 0;
-	public float timeWait = 1;
+	[Tooltip("How much time should lapse (seconds) between scans.")]
+	[SerializeField]
+	private float scanTime = 1;
 
-	private bool isOn = false;
-
+	[SerializeField]
 	public float maxMagnitude = 80;
+	[SerializeField]
 	public float mediumMagnitude = 40;
+	[SerializeField]
 	public float closeMagnitude = 10;
 
-	[SyncVar(hook = nameof(SyncSheetVariant))]
-	private int spriteSheetVariant;
+	private SpriteHandler arrowSpriteHandler;
 
-	[SyncVar(hook = nameof(SyncVariant))]
-	private int spriteVariant;
+	private GameObject objectToTrack;
+	private bool isOn = false;
 
-	private void Start()
+	private readonly Dictionary<int, ArrowSpriteVariant> directions = new Dictionary<int, ArrowSpriteVariant>()
+	{
+		// Cardinal arrow
+		{ -90, ArrowSpriteVariant.Down },
+		{ 0, ArrowSpriteVariant.Right },
+		{ 90, ArrowSpriteVariant.Up },
+		{ 180, ArrowSpriteVariant.Left },
+		{ -180, ArrowSpriteVariant.Left }, // Wraps around
+
+		// Diagonal arrow
+		{ -135, ArrowSpriteVariant.DownLeft },
+		{ -45, ArrowSpriteVariant.DownRight },
+		{ 45, ArrowSpriteVariant.UpRight },
+		{ 135, ArrowSpriteVariant.UpLeft }
+	};
+
+	private enum ArrowSprite
+	{
+		Null = 0,
+		Alert = 1,
+		AlertNull = 2,
+		AlertDirect = 3,
+		Direct = 4,
+		Close = 5,
+		Medium = 6,
+		Far = 7
+	}
+
+	private enum ArrowSpriteVariant
+	{
+		Down = 0,
+		Up = 1,
+		Right = 2,
+		Left = 3,
+		DownRight = 4,
+		DownLeft = 5,
+		UpRight = 6,
+		UpLeft = 7
+	}
+
+	#region Lifecycle
+
+	private void Awake()
+	{
+		arrowSpriteHandler = arrowGameObject.GetComponent<SpriteHandler>();
+	}
+
+	public override void OnStartServer()
 	{
 		var NukeDisks = FindObjectsOfType<NukeDiskScript>();
 
@@ -39,171 +80,133 @@ public class ItemPinpointer : NetworkBehaviour, IInteractable<HandActivate>
 		{
 			if (nukeDisk == null) continue;
 
-			if(!nukeDisk.secondaryNukeDisk)
+			if (!nukeDisk.secondaryNukeDisk)
 			{
-				objectToTrack =  nukeDisk.gameObject;
+				objectToTrack = nukeDisk.gameObject;
 				break;
 			}
 		}
 	}
 
-	private void OnEnable()
+	private void OnDisable()
 	{
-		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
-		EnsureInit();
-	}
-	void OnDisable()
-	{
-
-		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
-
+		ToggleOff();
 	}
 
-	private void ChangeAngleofSprite(Vector3 moveDirection)
-	{
+	#endregion Lifecycle
 
-		float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
-		if (CheckDistance(moveDirection))
+	private void UpdateMe()
+	{
+		if (objectToTrack != null)
 		{
-			AngleUpdate(angle);
-		}
-	}
-	private bool CheckDistance(Vector3 moveDirection)
-	{
-		if (moveDirection.magnitude > mediumMagnitude)
-		{
-			ServerChangeSpriteSheetVariant(4);
-
-		}
-		else if (moveDirection.magnitude > closeMagnitude)
-		{
-			ServerChangeSpriteSheetVariant(1);
-		}
-		else if (moveDirection.magnitude < closeMagnitude)
-		{
-			if (moveDirection == Vector3.zero)
-			{
-				ServerChangeSpriteVariant(0);
-				ServerChangeSpriteSheetVariant(3);
-				return false;
-			}
-			ServerChangeSpriteSheetVariant(2);
-
-		}
-		return true;
-	}
-	private void AngleUpdate(float angle)
-	{
-		switch (angle)
-		{
-			case 0f:
-				ServerChangeSpriteVariant(2);
-				return;
-			case 180.0f:
-				ServerChangeSpriteVariant(3);
-				return;
-			case -90.0f:
-				ServerChangeSpriteVariant(0);
-				return;
-			case 90.0f:
-				ServerChangeSpriteVariant(1);
-				return;
-			default:
-				break;
-		}
-		if(angle < 0.0f && angle > -90.0f)
-		{
-			ServerChangeSpriteVariant(4);
-			return;
-		}
-		if (angle > 0.0f && angle < 90.0f)
-		{
-			ServerChangeSpriteVariant(6);
-			return;
-		}
-		if (angle > 90.0f && angle < 180.0f)
-		{
-			ServerChangeSpriteVariant(7);
-			return;
-		}
-		if (angle < -90.0f)
-		{
-			ServerChangeSpriteVariant(5);
-			return;
-		}
-
-	}
-
-	private void SyncSheetVariant(int oldSheetVar, int newSheetVar)
-	{
-		spriteVariant = 0;
-		spriteHandler.ChangeSpriteVariant(0);
-		spriteSheetVariant = newSheetVar;
-		spriteHandler.ChangeSprite(spriteSheetVariant);
-		pick.RefreshUISlotImage();
-
-	}
-
-	private void SyncVariant(int oldVar, int newVar)
-	{
-		spriteVariant = newVar;
-		spriteHandler.ChangeSpriteVariant(newVar);
-		pick.RefreshUISlotImage();
-
-	}
-	private void EnsureInit()
-	{
-		pick = GetComponent<Pickupable>();
-		spriteHandler = rendererSprite.GetComponent<SpriteHandler>();
-	}
-
-	public void ServerPerformInteraction(HandActivate interaction)
-	{
-			if(objectToTrack == null)
-			{
-				objectToTrack = FindObjectOfType<NukeDiskScript>().gameObject;
-			}
-			isOn = !isOn;
-			ServerChangeSpriteVariant(0);
-			ServerChangeSpriteSheetVariant(0);
-			pick.RefreshUISlotImage();
-	}
-
-	[Server]
-	private void ServerChangeSpriteSheetVariant(int newSheetVar)
-	{
-		spriteSheetVariant = newSheetVar;
-	}
-
-	[Server]
-	private void ServerChangeSpriteVariant(int newVar)
-	{
-		spriteVariant = newVar;
-	}
-	protected virtual void UpdateMe()
-	{
-		if (isServer)
-		{
-
-			timeElapsedSprite += Time.deltaTime;
-			if (timeElapsedSprite > timeWait)
-			{
-				if (isOn)
-				{
-					Vector3 moveDirection = objectToTrack.AssumedWorldPosServer() - gameObject.AssumedWorldPosServer();
-					ChangeAngleofSprite(moveDirection);
-				}
-				timeElapsedSprite = 0;
-			}
+			Vector3 moveDirection = objectToTrack.AssumedWorldPosServer() - gameObject.AssumedWorldPosServer();
+			UpdateArrowSprite(moveDirection);
 		}
 		else
 		{
-			timeElapsedIcon += Time.deltaTime;
-			if (timeElapsedIcon > 0.2f)
-			{
-				pick.RefreshUISlotImage();
-				timeElapsedIcon = 0;
-			}
+			SetArrowSpriteToNull();
 		}
 	}
+
+	private void UpdateArrowSprite(Vector3 moveDirection)
+	{
+		if (moveDirection == Vector3.zero)
+		{
+			ChangeArrowSprite(ArrowSprite.Direct);
+			arrowSpriteHandler.ChangeSpriteVariant(0); // No variant for Direct.
+			return;
+		}
+
+		ArrowSprite newSprite = GetArrowFromMagnitude(moveDirection.magnitude);
+		ChangeArrowSprite(newSprite);
+
+		float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
+		ArrowSpriteVariant newVariant = GetArrowVariantFromAngle(angle);
+		ChangeArrowSpriteVariant(newVariant);
+	}
+
+	private ArrowSprite GetArrowFromMagnitude(float magnitude)
+	{
+		if (magnitude >= mediumMagnitude) return ArrowSprite.Far;
+		if (magnitude >= closeMagnitude) return ArrowSprite.Medium;
+		if (magnitude <= closeMagnitude) return ArrowSprite.Close;
+
+		return default;
+	}
+
+	private ArrowSpriteVariant GetArrowVariantFromAngle(float angle)
+	{
+		float bestAngle = 360;
+		ArrowSpriteVariant bestVariant = default;
+
+		foreach (var kvp in directions)
+		{
+			var testValue = Math.Abs(kvp.Key - angle);
+			if (testValue < bestAngle)
+			{
+				bestAngle = testValue;
+				bestVariant = kvp.Value;
+			}
+		}
+
+		return bestVariant;
+	}
+
+	private void ChangeArrowSprite(ArrowSprite sprite)
+	{
+		arrowSpriteHandler.ChangeSprite((int)sprite);
+	}
+
+	private void ChangeArrowSpriteVariant(ArrowSpriteVariant spriteVariant)
+	{
+		arrowSpriteHandler.ChangeSpriteVariant((int)spriteVariant);
+	}
+
+	private void SetArrowSpriteToNull()
+	{
+		ChangeArrowSprite(ArrowSprite.AlertNull);
+		arrowSpriteHandler.ChangeSpriteVariant(0); // No variant for AlertNull.
+	}
+
+	#region Interaction
+
+	public void ServerPerformInteraction(HandActivate interaction)
+	{
+		Toggle();
+	}
+
+	private void Toggle()
+	{
+		isOn = !isOn;
+
+		if (isOn)
+		{
+			ToggleOn();
+		}
+		else
+		{
+			ToggleOff();
+		}
+	}
+
+	private void ToggleOn()
+	{
+		SetArrowSpriteToNull();
+		arrowSpriteHandler.PushTexture();
+
+		if (objectToTrack == null)
+		{
+			objectToTrack = FindObjectOfType<NukeDiskScript>().gameObject;
+		}
+
+		UpdateManager.Add(UpdateMe, scanTime);
+	}
+
+	private void ToggleOff()
+	{
+		arrowSpriteHandler.PushClear();
+		UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, UpdateMe);
+	}
+
+	#endregion Interaction
 }

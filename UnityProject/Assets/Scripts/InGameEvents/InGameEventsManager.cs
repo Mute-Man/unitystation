@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using AdminTools;
-using UnityEngine;
-using DiscordWebhook;
-using System;
-using System.Linq;
-using Random = UnityEngine.Random;
+﻿using DiscordWebhook;
 using GameConfig;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace InGameEvents
 {
@@ -102,12 +100,15 @@ namespace InGameEvents
 			if (list == null)
 			{
 				Debug.LogError("An event has been set to random type, random is a dummy type and cant be accessed.");
+				return;
 			}
 
-			list?.Add(eventToAdd);
+			if (list.Contains(eventToAdd)) return;
+
+			list.Add(eventToAdd);
 		}
 
-		public void TriggerSpecificEvent(int eventIndex, InGameEventType eventType, bool isFake = false, string adminName = null, bool announceEvent = true)
+		public void TriggerSpecificEvent(int eventIndex, InGameEventType eventType, bool isFake = false, string adminName = null, bool announceEvent = true, string serializedEventParameters = null)
 		{
 			List<EventScriptBase> list;
 
@@ -135,7 +136,7 @@ namespace InGameEvents
 				var eventChosen = list[eventIndex - 1];
 				eventChosen.FakeEvent = isFake;
 				eventChosen.AnnounceEvent = announceEvent;
-				eventChosen.TriggerEvent();
+				eventChosen.TriggerEvent(serializedEventParameters);
 
 				var msg = $"{adminName}: triggered the event: {eventChosen.EventName}. Is fake: {isFake}. Announce: {announceEvent}";
 
@@ -213,6 +214,25 @@ namespace InGameEvents
 				case InGameEventType.Debug:
 					return ListOfDebugEventScripts;
 				default: return null;
+			}
+		}
+
+		public void RemoveEventFromList(EventScriptBase eventToRemove, InGameEventType enumValue)
+		{
+			switch (enumValue)
+			{
+				case InGameEventType.Fun:
+					ListOfFunEventScripts.Remove(eventToRemove);
+					return;
+				case InGameEventType.Special:
+					ListOfSpecialEventScripts.Remove(eventToRemove);
+					return;
+				case InGameEventType.Antagonist:
+					ListOfAntagonistEventScripts.Remove(eventToRemove);
+					return;
+				case InGameEventType.Debug:
+					ListOfDebugEventScripts.Remove(eventToRemove);
+					return;
 			}
 		}
 

@@ -94,12 +94,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db025f3627a11af4fb670ccd1e2188ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spriteData:
-    isPaletteds: 
-  Sprites: []
-  spriteIndex: 0
+  NetworkThis: 1
+  SubCatalogue: []
+  PresentSpriteSet: {fileID: 0}
+  pushTextureOnStartUp: 1
   variantIndex: 0
-  SetSpriteOnStartUp: 0
+  palette: []
+  Sprites: []
 --- !u!114 &3455797209412696065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,7 +137,7 @@ PrefabInstance:
     - target: {fileID: 7701549257419364482, guid: f866b44bcdd7d734885f7c49999d85c9,
         type: 3}
       propertyPath: initialTraits.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7701549257419364482, guid: f866b44bcdd7d734885f7c49999d85c9,
         type: 3}
@@ -161,6 +162,12 @@ PrefabInstance:
       propertyPath: initialName
       value: intravenous medicine bag
       objectReference: {fileID: 0}
+    - target: {fileID: 7701549257419364482, guid: f866b44bcdd7d734885f7c49999d85c9,
+        type: 3}
+      propertyPath: initialTraits.Array.data[3]
+      value: 
+      objectReference: {fileID: 11400000, guid: a8d46b67395aa39438ab785de5a06407,
+        type: 2}
     - target: {fileID: 7785875528613525472, guid: f866b44bcdd7d734885f7c49999d85c9,
         type: 3}
       propertyPath: m_Name

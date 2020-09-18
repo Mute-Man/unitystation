@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using UnityEngine;
 using Mirror;
+using Pipes;
 
 public class PipeDispenser : NetworkBehaviour
 {
-	const float ANIMATION_TIME = 2; // As per sprite sheet JSON file.
+	const float DISPENSING_TIME = 2; // As per sprite sheet JSON file.
 
 	ObjectBehaviour objectBehaviour;
 	WrenchSecurable securable;
@@ -13,10 +14,7 @@ public class PipeDispenser : NetworkBehaviour
 
 	Coroutine animationRoutine;
 
-	[SyncVar(hook = nameof(OnMachineStatusChange))]
-	bool machineOperating = false;
-
-	public bool MachineOperating => machineOperating;
+	public bool MachineOperating { get; private set; } = false;
 
 	[SyncVar(hook = nameof(SyncObjectProperties))]
 	PipeObjectSettings newPipe;
@@ -26,6 +24,12 @@ public class PipeDispenser : NetworkBehaviour
 		LayerOne,
 		LayerTwo,
 		LayerThree
+	}
+
+	private enum SpriteState
+	{
+		Idle = 0,
+		Operating = 1
 	}
 
 	void Awake()
@@ -38,16 +42,16 @@ public class PipeDispenser : NetworkBehaviour
 		securable.OnAnchoredChange.AddListener(OnAnchoredChange);
 	}
 
-	void OnMachineStatusChange(bool oldState, bool newState)
-	{
-		machineOperating = newState;
-		UpdateSprite();
-	}
-
 	void UpdateSprite()
 	{
-		if (MachineOperating) spriteHandler.ChangeSprite(1);
-		else spriteHandler.ChangeSprite(0);
+		if (MachineOperating)
+		{
+			spriteHandler.ChangeSprite((int) SpriteState.Operating);
+		}
+		else
+		{
+			spriteHandler.ChangeSprite((int) SpriteState.Idle);
+		}
 	}
 
 	void SyncObjectProperties(PipeObjectSettings oldState, PipeObjectSettings newState)
@@ -62,25 +66,31 @@ public class PipeDispenser : NetworkBehaviour
 
 		this.RestartCoroutine(SetMachineOperating(), ref animationRoutine);
 		SpawnResult spawnResult = Spawn.ServerPrefab(objectPrefab, objectBehaviour.AssumedWorldPositionServer());
+
 		if (spawnResult.Successful)
 		{
-			newPipe = new PipeObjectSettings {
+			spawnResult.GameObject.GetComponent<PipeItem>()?.SetColour(pipeColor);
+
+			newPipe = new PipeObjectSettings
+			{
 					pipeObject = spawnResult.GameObject,
 					pipeColor = pipeColor
 			};
 		}
 		else
 		{
-			throw new MissingReferenceException(
-					$"Failed to spawn an object from {name}! Is GUI_{name} missing reference to object prefab?");
+			Logger.LogError($"Failed to spawn an object from {name}! Is GUI_{name} missing reference to object prefab?");
 		}
 	}
 
 	IEnumerator SetMachineOperating()
 	{
-		machineOperating = true;
-		yield return WaitFor.Seconds(ANIMATION_TIME);
-		machineOperating = false;
+		MachineOperating = true;
+		UpdateSprite();
+		SoundManager.PlayNetworkedAtPos("PosterCreate", objectBehaviour.AssumedWorldPositionServer(), sourceObj: gameObject);
+		yield return WaitFor.Seconds(DISPENSING_TIME);
+		MachineOperating = false;
+		UpdateSprite();
 	}
 
 	void OnAnchoredChange()

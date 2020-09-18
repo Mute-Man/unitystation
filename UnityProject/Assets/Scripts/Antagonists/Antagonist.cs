@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
+using NaughtyAttributes;
 
 namespace Antagonists
 {
@@ -15,9 +16,34 @@ namespace Antagonists
 
 		[Tooltip("The antag jobType")]
 		[SerializeField]
-		private JobType antagJobType;
+		private JobType antagJobType = default;
 
 		public JobType AntagJobType => antagJobType;
+
+		[BoxGroup("Spawn Banner")]
+		[Tooltip("Should this antag play a sound cue on spawn?")]
+		[SerializeField]
+		private bool playSound = false;
+		public bool PlaySound => playSound;
+
+		[BoxGroup("Spawn Banner")]
+		[ShowIf(nameof(playSound))]
+		[Tooltip("The sound a player hears when they spawn as this antag.")]
+		[SerializeField]
+		private string spawnSound = "Notice1";
+		public string SpawnSound => spawnSound;
+
+		[BoxGroup("Spawn Banner")]
+		[Tooltip("What color should the text in the spawn banner be for this antag.")]
+		[SerializeField]
+		private Color textColor = Color.red;
+		public Color TextColor => textColor;
+
+		[BoxGroup("Spawn Banner")]
+		[Tooltip("The color for the background of the banner")]
+		[SerializeField]
+		private Color backgroundColor = Color.red;
+		public Color BackgroundColor => backgroundColor;
 
 		/// <summary>
 		/// The name of the antagonist type
@@ -79,6 +105,5 @@ namespace Antagonists
 		/// <param name="spawnRequest">player's requested spawn</param>
 		/// <returns>gameobject of the spawned antag that he player is now in control of</returns>
 		public abstract GameObject ServerSpawn(PlayerSpawnRequest spawnRequest);
-
 	}
 }

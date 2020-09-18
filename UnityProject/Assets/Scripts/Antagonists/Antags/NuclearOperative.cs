@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Antagonists
@@ -6,6 +5,9 @@ namespace Antagonists
 	[CreateAssetMenu(menuName="ScriptableObjects/Antagonist/NuclearOperative")]
 	public class NuclearOperative : Antagonist
 	{
+		[Tooltip("For use in Syndicate Uplinks")]
+		public int initialTC = 20;
+
 		// add any NuclearOperative specific logic here
 		public override GameObject ServerSpawn(PlayerSpawnRequest spawnRequest)
 		{
@@ -25,5 +27,4 @@ namespace Antagonists
 			return newPlayer;
 		}
 	}
-
 }

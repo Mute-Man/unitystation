@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Electric.Inheritance;
 using Mirror;
+using ScriptableObjects;
 using UnityEngine;
 
 public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInteractable<HandApply>, ISetMultitoolMaster
@@ -17,7 +18,7 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 	public Sprite topLightSpriteNormal;
 	public Sprite openEmptySprite;
 	public Sprite openCabledSprite;
-	public SpriteSheetAndData topLightSpriteAlert;
+	public SpriteDataSO topLightSpriteAlert;
 
 	public bool coverOpen;
 	public bool hasCables = true;
@@ -134,7 +135,7 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 					stateSync = FireAlarmState.OpenEmptySprite;
 				}
 			}
-			SoundManager.PlayNetworkedAtPos("screwdriver1", interaction.Performer.WorldPosServer());
+			ToolUtils.ServerPlayToolSound(interaction);
 			return;
 		}
 		if (coverOpen)
@@ -168,7 +169,6 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 						stateSync = FireAlarmState.OpenCabledSprite;
 					});
 			}
-
 		}
 		else
 		{
@@ -191,7 +191,6 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 				SendCloseAlerts();
 			}
 		}
-
 	}
 
 	private IEnumerator SwitchCoolDown()
@@ -206,7 +205,8 @@ public class FireAlarm : SubscriptionController, IServerLifecycle, ICheckedInter
 		stateSync = stateNew;
 		if (stateNew == FireAlarmState.TopLightSpriteAlert)
 		{
-			spriteHandler.SetSprite(topLightSpriteAlert, 0);
+
+			spriteHandler.SetSpriteSO(topLightSpriteAlert);
 		}
 		else if (stateNew == FireAlarmState.OpenEmptySprite)
 		{

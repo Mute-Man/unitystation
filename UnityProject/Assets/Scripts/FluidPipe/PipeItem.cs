@@ -1,29 +1,39 @@
-﻿using System.Linq;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Mirror;
 using UnityEngine;
 
 namespace Pipes
 {
-	public class PipeItem : MonoBehaviour, ICheckedInteractable<HandApply>
+	public class PipeItem : NetworkBehaviour, ICheckedInteractable<HandApply>, ICheckedInteractable<HandActivate>
 	{
-		public Color Colour;
-		//This is to be never rotated on items
-		public PipeTile pipeTile;
-		public PipeActions PipeAction;
+		public Color Colour = Color.white;
 
 		public SpriteHandler SpriteHandler;
-		public ObjectBehaviour objectBehaviour;
+		public RegisterItem registerItem;
+		private PlayerRotatable rotatable;
 
 		private void Awake()
 		{
 			SpriteHandler = this.GetComponentInChildren<SpriteHandler>();
-			objectBehaviour = this.GetComponent<ObjectBehaviour>();
+			registerItem = this.GetComponent<RegisterItem>();
+			rotatable = GetComponent<PlayerRotatable>();
 		}
 
-		[RightClickMethod]
-		public void Dothing()
+		public void Start()
 		{
-			Logger.Log("transform.localRotation  " +  transform.localRotation);
+			SpriteHandler.SetColor(Colour);
 		}
+
+		public void SetColour(Color newColour)
+		{
+			Colour = newColour;
+			SpriteHandler.SetColor(Colour);
+		}
+
+		#region Interactions
 
 		public virtual bool WillInteract(HandApply interaction, NetworkSide side)
 		{
@@ -37,42 +47,49 @@ namespace Pipes
 		{
 			if (Validations.HasItemTrait(interaction.UsedObject, CommonTraits.Instance.Wrench))
 			{
-				var ZeroedLocation = new Vector3Int(x:objectBehaviour.registerTile.LocalPosition.x, y:objectBehaviour.registerTile.LocalPosition.y,0);
-				var metaData = objectBehaviour.registerTile.Matrix.MetaDataLayer.Get(ZeroedLocation);
-				var Tile = GetPipeTile();
-				if (metaData.PipeData.Any(x => x.pipeData.PipeLayer == Tile.PipeLayer)) return;
+				var ZeroedLocation = new Vector3Int(x:registerItem.LocalPosition.x, y:registerItem.LocalPosition.y,0);
+				var metaData = registerItem.Matrix.MetaDataLayer.Get(ZeroedLocation);
+				var thisConnections = GetConnections();
+				int Offset = PipeFunctions.GetOffsetAngle(transform.localEulerAngles.z);
+				thisConnections.Rotate(Offset);
+
+				foreach (var Pipeo in metaData.PipeData)
+				{
+					var TheConnection = Pipeo.pipeData.Connections;
+					for (int i = 0; i < thisConnections.Directions.Length; i++)
+					{
+						if (thisConnections.Directions[i].Bool && TheConnection.Directions[i].Bool)
+						{
+							return;
+						}
+					}
+				}
+				ToolUtils.ServerPlayToolSound(interaction);
 				BuildPipe();
-				return;
 			}
 
-			this.transform.Rotate(0, 0, -90);
+			rotatable.Rotate();
 		}
+
+		public virtual bool WillInteract(HandActivate interaction, NetworkSide side)
+		{
+			return DefaultWillInteract.Default(interaction, side);
+		}
+
+		public virtual void ServerPerformInteraction(HandActivate interaction)
+		{
+			rotatable.Rotate();
+		}
+
+		#endregion Interactions
 
 		public virtual void BuildPipe()
 		{
-			var searchVec = objectBehaviour.registerTile.LocalPosition;
-			var Tile = (GetPipeTile());
-			if (Tile != null)
-			{
-				int Offset = PipeFunctions.GetOffsetAngle(transform.localEulerAngles.z);
-				Quaternion rot = Quaternion.Euler(0.0f, 0.0f,Offset );
-				var Matrix = Matrix4x4.TRS(Vector3.zero, rot, Vector3.one);
-				objectBehaviour.registerTile.Matrix.AddUnderFloorTile(searchVec, Tile,Matrix,Colour);
-				Tile.InitialiseNode(searchVec,objectBehaviour.registerTile.Matrix);
-				Despawn.ServerSingle(this.gameObject);
-			}
-
 		}
 
-		public virtual void Setsprite()
+		public virtual Connections GetConnections()
 		{
+			return null;
 		}
-
-		public virtual PipeTile GetPipeTile()
-		{
-			return (pipeTile);
-		}
-
 	}
-
 }

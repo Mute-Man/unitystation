@@ -19,6 +19,7 @@ public class GUI_PipeDispenser : NetTab
 	[SerializeField] List<NetPage> categoryPages;
 #pragma warning restore 0649
 
+	int currentCategoryNumber = 0;
 	int[] previousCategoryPages;
 
 	PipeDispenser.PipeLayer pipeLayer = PipeDispenser.PipeLayer.LayerTwo;
@@ -113,11 +114,6 @@ public class GUI_PipeDispenser : NetTab
 
 	#region Buttons
 
-	public void CloseTab()
-	{
-		ControlTabs.CloseTab(Type, Provider);
-	}
-
 	public void ServerSetCategory(int categoryNumber)
 	{
 		categorySwitcher.SetActivePage(categoryNumber);
@@ -135,6 +131,8 @@ public class GUI_PipeDispenser : NetTab
 				DisableLayerAndColorToggles();
 				break;
 		}
+
+		currentCategoryNumber = categoryNumber;
 	}
 
 	public void ServerSetLayer(int layerNumber)
@@ -150,6 +148,7 @@ public class GUI_PipeDispenser : NetTab
 	public void ServerSetDispensePage(int pageNumber)
 	{
 		dispensePageSwitcher.SetActivePage(pageNumber);
+		previousCategoryPages[currentCategoryNumber] = pageNumber;
 	}
 
 	public void ServerDispenseObject(GameObject objectPrefab)

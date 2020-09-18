@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,8 +12,9 @@ using DatabaseAPI;
 using DiscordWebhook;
 using Mirror;
 using GameConfig;
+using Initialisation;
 
-public partial class GameManager : MonoBehaviour
+public partial class GameManager : MonoBehaviour, IInitialise
 {
 	public static GameManager Instance;
 	public bool counting;
@@ -57,6 +58,16 @@ public partial class GameManager : MonoBehaviour
 	public bool RespawnAllowed { get; set; }
 
 	/// <summary>
+	/// True if the server allows gibbing people when they receive enough post-mortem damage.
+	/// </summary>
+	public bool GibbingAllowed { get; set; }
+
+	/// <summary>
+	/// If true, it will allow shuttles from dealing 9001 damage and instantly gibbing people when crashed
+	/// </summary>
+	public bool ShuttleGibbingAllowed { get; set; }
+
+	/// <summary>
 	/// The game mode that the server will switch to at round end if no mode or an invalid mode is selected.
 	/// <summary>
 	public string InitialGameMode { get; set; } = "Random";
@@ -96,6 +107,18 @@ public partial class GameManager : MonoBehaviour
 
 	private const float QueueCheckTimeServer = 1f;
 
+	public bool QuickLoad = false;
+
+	public InitialisationSystems Subsystem => InitialisationSystems.GameManager;
+
+	void IInitialise.Initialise()
+	{
+		// Set up server defaults, needs to be loaded here to ensure gameConfigManager is load.
+		LoadConfig();
+		RespawnCurrentlyAllowed = RespawnAllowed;
+		NextGameMode = InitialGameMode;
+	}
+
 	private void Awake()
 	{
 		if (Instance == null)
@@ -114,13 +137,6 @@ public partial class GameManager : MonoBehaviour
 		}
 	}
 
-	private void Start()
-	{
-		// Set up server defaults, needs to be loaded here to ensure gameConfigManager is load.
-		LoadConfig();
-		RespawnCurrentlyAllowed = RespawnAllowed;
-		NextGameMode = InitialGameMode;
-	}
 
 	///<summary>
 	/// Loads end user config settings for server defaults.
@@ -129,26 +145,15 @@ public partial class GameManager : MonoBehaviour
 	// TODO: Currently, there is no data validation to ensure the config has reasonable values, need to configure setters.
 	private void LoadConfig()
 	{
-		if(GameConfigManager.GameConfig.MinPlayersForCountdown != null)
-			MinPlayersForCountdown = GameConfigManager.GameConfig.MinPlayersForCountdown;
-
-		if(GameConfigManager.GameConfig.PreRoundTime != null)
-			PreRoundTime = GameConfigManager.GameConfig.PreRoundTime;
-
-		if(GameConfigManager.GameConfig.RoundEndTime != null)
-			RoundEndTime = GameConfigManager.GameConfig.RoundEndTime;
-
-		if(GameConfigManager.GameConfig.RoundsPerMap != null)
-			RoundsPerMap = GameConfigManager.GameConfig.RoundsPerMap;
-
-		if(GameConfigManager.GameConfig.InitialGameMode != null)
-			InitialGameMode = GameConfigManager.GameConfig.InitialGameMode;
-
-		if(GameConfigManager.GameConfig.RespawnAllowed != null)
-			RespawnAllowed = GameConfigManager.GameConfig.RespawnAllowed;
-
-		if(GameConfigManager.GameConfig.ShuttleDepartTime != null)
-			ShuttleDepartTime = GameConfigManager.GameConfig.ShuttleDepartTime;
+		MinPlayersForCountdown = GameConfigManager.GameConfig.MinPlayersForCountdown;
+		PreRoundTime = GameConfigManager.GameConfig.PreRoundTime;
+		RoundEndTime = GameConfigManager.GameConfig.RoundEndTime;
+		RoundsPerMap = GameConfigManager.GameConfig.RoundsPerMap;
+		InitialGameMode = GameConfigManager.GameConfig.InitialGameMode;
+		RespawnAllowed = GameConfigManager.GameConfig.RespawnAllowed;
+		ShuttleDepartTime = GameConfigManager.GameConfig.ShuttleDepartTime;
+		GibbingAllowed = GameConfigManager.GameConfig.GibbingAllowed;
+		ShuttleGibbingAllowed = GameConfigManager.GameConfig.ShuttleGibbingAllowed;
 	}
 
 	private void OnEnable()
@@ -492,7 +497,7 @@ public partial class GameManager : MonoBehaviour
 
 		string msg = GameManager.Instance.SecretGameMode ? "Secret" : $"{GameManager.Instance.GameMode}";
 
-		string message = $"A new round is starting on {ServerData.ServerConfig.ServerName}.\nThe current gamemode is: {msg}\n";
+		string message = $"A new round is starting on {ServerData.ServerConfig.ServerName}.\nThe current gamemode is: {msg}\nThe current map is: {SubSceneManager.ServerChosenMainStation}\n";
 
 		var playerNumber = PlayerList.Instance.ConnectionCount > PlayerList.LastRoundPlayerCount
 			? PlayerList.Instance.ConnectionCount
@@ -531,6 +536,12 @@ public partial class GameManager : MonoBehaviour
 		for(var i = 1; i <= count; i++)
 		{
 			var player = SpawnPlayerRequestQueue.Peek();
+
+			if (player == null || player.JoinedViewer == null)
+			{
+				SpawnPlayerRequestQueue.Dequeue();
+				continue;
+			}
 
 			int slotsTaken = GameManager.Instance.GetOccupationsCount(player.RequestedOccupation.JobType);
 			int slotsMax = GameManager.Instance.GetOccupationMaxCount(player.RequestedOccupation.JobType);
@@ -656,6 +667,7 @@ public partial class GameManager : MonoBehaviour
 	IEnumerator ServerRoundRestart()
 	{
 		Logger.Log("Server restarting round now.", Category.Round);
+		Chat.AddGameWideSystemMsgToChat("The round is now restarting...");
 
 		//Notify all clients that the round has ended
 		ServerToClientEventsMsg.SendToAll(EVENT.RoundEnded);

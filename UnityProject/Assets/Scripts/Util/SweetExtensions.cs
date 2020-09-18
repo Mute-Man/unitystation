@@ -23,6 +23,11 @@ public static class SweetExtensions
 		return go.GetComponent<ItemAttributesV2>();
 	}
 
+	public static ObjectAttributes Object(this GameObject go)
+	{
+		return go.GetComponent<ObjectAttributes>();
+	}
+
 	/// <summary>
 	/// Returns human-readable object name for IC texts
 	/// </summary>
@@ -41,6 +46,15 @@ public static class SweetExtensions
 			if (!String.IsNullOrWhiteSpace(item.InitialName))
 			{
 				return item.InitialName;
+			}
+		}
+
+		var entityObject = go.Object();
+		if (entityObject != null)
+		{
+			if (!string.IsNullOrWhiteSpace(entityObject.InitialName))
+			{
+				return entityObject.InitialName;
 			}
 		}
 
@@ -106,12 +120,20 @@ public static class SweetExtensions
 	/// Wraps provided index value if it's more than array length or is negative
 	public static T Wrap<T>(this T[] array, int index)
 	{
+		if (array == null || array.Length == 0)
+		{
+			return default(T);
+		}
 		return array[((index % array.Length) + array.Length) % array.Length];
 	}
 
 	/// Wraps provided index value if it's more than list length or is negative
 	public static T Wrap<T>(this List<T> list, int index)
 	{
+		if (list == null || list.Count == 0)
+		{
+			return default(T);
+		}
 		return list[((index % list.Count) + list.Count) % list.Count];
 	}
 

@@ -16,6 +16,9 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 	private HandApply currentInteraction;
 	private string objectName;
 
+	/// <summary>
+	/// Invoked after the anchored state is changed.
+	/// </summary>
 	[NonSerialized]
 	public UnityEvent OnAnchoredChange = new UnityEvent();
 	public bool IsAnchored => !objectBehaviour.IsPushable;
@@ -66,9 +69,6 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 
 	public void ServerPerformInteraction(HandApply interaction)
 	{
-		if (interaction.TargetObject != gameObject) return;
-		if (!Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Wrench)) return;
-
 		currentInteraction = interaction;
 		TryWrench();
 	}
@@ -81,7 +81,7 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 
 	#endregion Interactions
 
-	void TryWrench()
+	private void TryWrench()
 	{
 		if (IsAnchored) Unanchor();
 		else
@@ -95,7 +95,7 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 		}
 	}
 
-	bool VerboseFloorExists()
+	private bool VerboseFloorExists()
 	{
 		if (!MatrixManager.IsSpaceAt(registerObject.WorldPositionServer, true)) return true;
 
@@ -103,7 +103,7 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 		return false;
 	}
 
-	bool VerbosePlatingExposed()
+	private bool VerbosePlatingExposed()
 	{
 		if (!registerObject.TileChangeManager.MetaTileMap.HasTile(registerObject.LocalPositionServer, LayerType.Floors, true))
 		{
@@ -116,29 +116,31 @@ public class WrenchSecurable : NetworkBehaviour, ICheckedInteractable<HandApply>
 		return false;
 	}
 
-	void Anchor()
+	private void Anchor()
 	{
 		ToolUtils.ServerUseToolWithActionMessages(currentInteraction, secondsToSecure,
 				secondsToSecure == 0 ? "" : $"You start securing the {objectName}...",
 				secondsToSecure == 0 ? "" : $"{currentInteraction.Performer.ExpensiveName()} starts securing the {objectName}...",
 				$"You secure the {objectName}.",
 				$"{currentInteraction.Performer.ExpensiveName()} secures the {objectName}.",
-				() => objectBehaviour.ServerSetAnchored(true, currentInteraction.Performer)
+				() => SetAnchored(true)
 		);
-
-		OnAnchoredChange?.Invoke();
 	}
 
-	void Unanchor()
+	private void Unanchor()
 	{
 		ToolUtils.ServerUseToolWithActionMessages(currentInteraction, secondsToUnsecure,
 				secondsToSecure == 0 ? "" : $"You start unsecuring the {objectName}...",
 				secondsToSecure == 0 ? "" : $"{currentInteraction.Performer.ExpensiveName()} starts unsecuring the {objectName}...",
 				$"You unsecure the {objectName}.",
 				$"{currentInteraction.Performer.ExpensiveName()} unsecures the {objectName}.",
-				() => objectBehaviour.ServerSetAnchored(false, currentInteraction.Performer)
+				() => SetAnchored(false)
 		);
+	}
 
+	private void SetAnchored(bool isAnchored)
+	{
+		objectBehaviour.ServerSetAnchored(isAnchored, currentInteraction.Performer);
 		OnAnchoredChange?.Invoke();
 	}
 }

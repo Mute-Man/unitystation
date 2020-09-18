@@ -11,6 +11,7 @@ using UnityEngine.UIElements;
 using Lighting;
 using Pipes;
 using Radiation;
+using ScriptableObjects;
 using UnityEngine.Serialization;
 
 public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, ISetMultitoolMaster, IServerDespawn, IServerSpawn
@@ -23,8 +24,8 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 
 	private float tickCount;
 
-	[SerializeField] private ItemStorage RodStorage;
-	[SerializeField] private ItemStorage PipeStorage;
+	[SerializeField] private ItemStorage RodStorage = default;
+	[SerializeField] private ItemStorage PipeStorage = default;
 
 	private decimal NeutronLeakingChance = 0.0397M;
 
@@ -43,19 +44,15 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 	public ReactorPipe ReactorPipe;
 
 	private float WaterEnergyDensityPer1 = 10f;
-	private float RodDensityPer1 = 7.5f;
-
 
 	public ReactorChamberRod[] ReactorRods = new ReactorChamberRod[16];
 	public List<FuelRod> ReactorFuelRods = new List<FuelRod>();
 	public List<EngineStarter> ReactorEngineStarters = new List<EngineStarter>();
 
-
 	public float ControlRodDepthPercentage = 1;
 
 	private float EnergyToEvaporateWaterPer1 = 2000;
 
-	//public float RodLockingTemperatureK = 700f;
 	public float RodMeltingTemperatureK = 1100;
 	private float BoilingPoint = 373.15f;
 
@@ -66,7 +63,6 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 	public decimal CurrentPressure = 0;
 
 	public decimal MaxPressure = 120000;
-
 
 	public decimal KFactor
 	{
@@ -88,7 +84,7 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 
 	public float GetTemperature()
 	{
-		return (ReactorPipe.pipeData.mixAndVolume.Mix.Temperature);
+		return (ReactorPipe.pipeData.mixAndVolume.Temperature);
 	}
 
 	public decimal NonNeutronAbsorptionProbability()
@@ -114,11 +110,11 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 		}
 		else
 		{
-			return ((decimal) (100f / (100f + ReactorPipe.pipeData.mixAndVolume.Mix.Total)) *
+			return ((decimal) (100f / (100f + ReactorPipe.pipeData.mixAndVolume.Total.x)) *
 			        (NumberOfRods / ReactorRods.Length));
 		}
 
-		return (0.71M);
+		//return (0.71M); // Unreachable
 	}
 
 	/*public decimal NeutronGenerationProbability()
@@ -170,15 +166,13 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 
 		if (PoppedPipes) //Its blown up so not connected so vent to steam
 		{
-			if (ReactorPipe.pipeData.mixAndVolume.Mix.Total > 0 &&
-			    ReactorPipe.pipeData.mixAndVolume.Mix.Temperature > BoilingPoint)
+			if (ReactorPipe.pipeData.mixAndVolume.Total.x > 0 &&
+			    ReactorPipe.pipeData.mixAndVolume.Temperature > BoilingPoint)
 			{
-				var ExcessEnergy = (ReactorPipe.pipeData.mixAndVolume.Mix.Temperature - BoilingPoint);
-				ReactorPipe.pipeData.mixAndVolume.Mix.TransferTo(new ReagentMix(), (EnergyToEvaporateWaterPer1
-				                                                                    * ExcessEnergy *
-				                                                                    (WaterEnergyDensityPer1 *
-				                                                                     ReactorPipe.pipeData
-					                                                                     .mixAndVolume.Mix.Total)));
+				var ExcessEnergy = (ReactorPipe.pipeData.mixAndVolume.Temperature - BoilingPoint);
+				ReactorPipe.pipeData.mixAndVolume.Remove( (ReactorPipe.pipeData
+					.mixAndVolume.Total * (EnergyToEvaporateWaterPer1
+					                       * ExcessEnergy * WaterEnergyDensityPer1)));
 			}
 		}
 
@@ -261,25 +255,21 @@ public class ReactorGraphiteChamber : MonoBehaviour, IInteractable<HandApply>, I
 			}
 		}
 
-		var ExtraEnergyGained = (float) EnergyReleased /
-		                        ((RodDensityPer1 * rods) +
-		                         (WaterEnergyDensityPer1 *
-		                          ReactorPipe.pipeData.mixAndVolume.Mix.Total)); //when add cool
-
-		if (ReactorPipe.pipeData.mixAndVolume.Mix.WholeHeatCapacity == 0)
+		var ExtraEnergyGained = (float) EnergyReleased;
+		if (ReactorPipe.pipeData.mixAndVolume.WholeHeatCapacity == 0)
 		{
-			ReactorPipe.pipeData.mixAndVolume.Mix.Temperature += ExtraEnergyGained / 90000;
+			ReactorPipe.pipeData.mixAndVolume.Temperature += ExtraEnergyGained / 90000;
+			var FF = ReactorPipe.pipeData.mixAndVolume.InternalEnergy;
 		}
 		else
 		{
-			ReactorPipe.pipeData.mixAndVolume.Mix.InternalEnergy =
-				ReactorPipe.pipeData.mixAndVolume.Mix.InternalEnergy + ExtraEnergyGained;
+			ReactorPipe.pipeData.mixAndVolume.InternalEnergy =
+				ReactorPipe.pipeData.mixAndVolume.InternalEnergy + ExtraEnergyGained;
 		}
 
+		CurrentPressure = (decimal) ((ReactorPipe.pipeData.mixAndVolume.Temperature - 293.15f) *
+		                             ReactorPipe.pipeData.mixAndVolume.Total.x);
 
-
-		CurrentPressure = (decimal) ((ReactorPipe.pipeData.mixAndVolume.Mix.Temperature - 293.15f) *
-		                             ReactorPipe.pipeData.mixAndVolume.Mix.Total);
 		if (CurrentPressure > MaxPressure)
 		{
 			PoppedPipes = true;

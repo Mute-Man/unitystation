@@ -4,7 +4,7 @@
  */
 
 using Atmospherics;
-using Objects;
+using Objects.GasContainer;
 using UnityEngine;
 
 public class PlasmaAddable : MonoBehaviour, ICheckedInteractable<HandApply>, IRightClickable
@@ -26,7 +26,7 @@ public class PlasmaAddable : MonoBehaviour, ICheckedInteractable<HandApply>, IRi
 
 		if (interaction.TargetObject != gameObject
 		    || interaction.HandObject == null
-		    || interaction.HandObject.GetComponent<SolidPlasma>() == null)
+			|| !Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.SolidPlasma))
 		{
 			return false;
 		}
@@ -38,7 +38,7 @@ public class PlasmaAddable : MonoBehaviour, ICheckedInteractable<HandApply>, IRi
 	{
 		var handObj = interaction.HandObject;
 
-		if (handObj.GetComponent<SolidPlasma>() == null)
+		if (!Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.SolidPlasma))
 		{
 			return;
 		}

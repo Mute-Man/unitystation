@@ -45,15 +45,21 @@ public class PipeDeconstruction : TileInteraction
 		for (var i = 0; i < metaDataNode.PipeData.Count; i++)
 		{
 			if (metaDataNode.PipeData[i].RelatedTile != PipeTile) continue;
-			var Transform =  matrix.UnderFloorLayer.GetMatrix4x4(metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
-			var pipe = Spawn.ServerPrefab(PipeTile.SpawnOnDeconstruct, interaction.WorldPositionTarget, localRotation : QuaternionFromMatrix(Transform)).GameObject;
-			var itempipe = pipe.GetComponent<PipeItem>();
-			itempipe.Colour = matrix.UnderFloorLayer.GetColour(metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
-			itempipe.Setsprite();
-			matrix.RemoveUnderFloorTile( metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
-			metaDataNode.PipeData[i].pipeData.OnDisable();
-			metaDataNode.PipeData.RemoveAt(i);
+			ToolUtils.ServerUseToolWithActionMessages(interaction, 1f,
+				"You start to deconstruct the pipe..",
+				$"{interaction.Performer.ExpensiveName()} starts to deconstruct the pipe...",
+				"You deconstruct the pipe",
+				$"{interaction.Performer.ExpensiveName()} deconstructs the pipe.",
+				() => { metaDataNode.PipeData[i].pipeData.DestroyThis(); });
 			return;
+			// var Transform =  matrix.UnderFloorLayer.GetMatrix4x4(metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
+			// var pipe = Spawn.ServerPrefab(PipeTile.SpawnOnDeconstruct, interaction.WorldPositionTarget, localRotation : QuaternionFromMatrix(Transform)).GameObject;
+			// var itempipe = pipe.GetComponent<PipeItemTile>();
+			// itempipe.Colour = matrix.UnderFloorLayer.GetColour(metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
+			// itempipe.Setsprite();
+			// matrix.RemoveUnderFloorTile( metaDataNode.PipeData[i].NodeLocation, metaDataNode.PipeData[i].RelatedTile);
+			// var savedpipe = metaDataNode.PipeData[i].pipeData;
+			// metaDataNode.PipeData.RemoveAt(i);
 		}
 
 

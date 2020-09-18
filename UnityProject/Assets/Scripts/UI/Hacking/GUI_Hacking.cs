@@ -420,6 +420,7 @@ public class GUI_Hacking : NetTab
 		HackingNode inputNode = wireUI.EndNode.HackNode;
 
 		outputNode.RemoveConnectedNode(inputNode);
+		SoundManager.PlayNetworkedAtPos("Wirecut#", PlayerManager.LocalPlayerScript.WorldPos);
 
 		//If we're on client, network to the server the changes we made.
 		if (!IsServer)
@@ -561,10 +562,4 @@ public class GUI_Hacking : NetTab
 			}
 		}
 	}
-
-	public void CloseTab()
-	{
-		ControlTabs.CloseTab(Type, Provider);
-	}
-
 }

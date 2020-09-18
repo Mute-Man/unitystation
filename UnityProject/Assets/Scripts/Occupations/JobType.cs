@@ -58,5 +58,25 @@ public enum JobType
 	ERT_JANITOR = 46,
 	ERT_CLOWN = 47,
 	TRAITOR = 48,
-	CARGONIAN = 49
+	CARGONIAN = 49,
+	PRISONER = 50,
+	FUGITIVE = 51
+}
+
+public static class JobCategories
+{
+	public static readonly List<JobType> CentCommJobs = new List<JobType>()
+	{
+		JobType.CENTCOMM_OFFICER,
+		JobType.CENTCOMM_INTERN,
+		JobType.CENTCOMM_COMMANDER,
+		JobType.DEATHSQUAD,
+		JobType.ERT_COMMANDER,
+		JobType.ERT_SECURITY,
+		JobType.ERT_MEDIC,
+		JobType.ERT_ENGINEER,
+		JobType.ERT_CHAPLAIN,
+		JobType.ERT_JANITOR,
+		JobType.ERT_CLOWN
+	};
 }

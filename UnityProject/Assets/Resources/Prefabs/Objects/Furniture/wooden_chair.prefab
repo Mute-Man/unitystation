@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 6830089732404172710}
   - component: {fileID: -4125858894873895098}
   - component: {fileID: -1442809630732524517}
-  m_Layer: 11
+  m_Layer: 23
   m_Name: wooden_chair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -362,7 +362,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  resourcesMadeOf: {fileID: 6254655335276451647, guid: 7543d187ee101c148ab143a796d9d175,
+  resourcesMadeOf: {fileID: 2663802320431471963, guid: 9ae38f6aa43b5cd4ba608cd31b462b24,
     type: 3}
   howMany: 1
 --- !u!114 &2879262912181080695
