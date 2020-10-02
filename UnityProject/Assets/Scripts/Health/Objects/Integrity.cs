@@ -12,6 +12,8 @@ using Tilemaps.Behaviours.Meta;
 using UnityEngine.Profiling;
 using Object = System.Object;
 using Random = UnityEngine.Random;
+using Effects.Overlays;
+
 /// <summary>
 /// Component which allows an object to have an integrity value (basically an object's version of HP),
 /// take damage, and do things in response to integrity changes. Objects are destroyed when their integrity
@@ -87,7 +89,6 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 	[Tooltip("Below this temperature (in Kelvin) the object will be unaffected by fire exposure.")]
 	public float HeatResistance = 100;
 
-
 	[SyncVar(hook = nameof(SyncOnFire))]
 	private bool onFire = false;
 	private BurningOverlay burningObjectOverlay;
@@ -103,7 +104,6 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 	private static float BURNING_DAMAGE = 0.08f;
 
 	private static readonly float BURN_RATE = 1f;
-	private float timeSinceLastBurn;
 
 	public float integrity { get; private set; } = 100f;
 	private bool destroyed = false;
@@ -121,14 +121,12 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 		EnsureInit();
 	}
 
-	private void OnEnable()
-	{
-		UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
-	}
-
 	private void OnDisable()
 	{
-		UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
+		if (CustomNetworkManager.IsServer)
+		{
+			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, PeriodicUpdateBurn);
+		}
 	}
 
 	private void EnsureInit()
@@ -136,8 +134,8 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 		if (registerTile != null) return;
 		if (SMALL_BURNING_PREFAB == null)
 		{
-			SMALL_BURNING_PREFAB = Resources.Load<GameObject>("SmallBurning");
-			LARGE_BURNING_PREFAB = Resources.Load<GameObject>("LargeBurning");
+			SMALL_BURNING_PREFAB = Resources.Load<GameObject>("BurningSmall");
+			LARGE_BURNING_PREFAB = Resources.Load<GameObject>("BurningLarge");
 		}
 
 		if (SMALL_ASH == null)
@@ -169,7 +167,6 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 			//cloned
 			var clonedIntegrity = info.ClonedFrom.GetComponent<Integrity>();
 			integrity = clonedIntegrity.integrity;
-			timeSinceLastBurn = clonedIntegrity.timeSinceLastBurn;
 			destroyed = clonedIntegrity.destroyed;
 			SyncOnFire(onFire, clonedIntegrity.onFire);
 		}
@@ -177,7 +174,6 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 		{
 			//spawned
 			integrity = initialIntegrity;
-			timeSinceLastBurn = 0;
 			destroyed = false;
 			if (burningObjectOverlay != null)
 			{
@@ -237,17 +233,9 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 		}
 	}
 
-	private void UpdateMe()
+	private void PeriodicUpdateBurn()
 	{
-		if (onFire && isServer)
-		{
-			timeSinceLastBurn += Time.deltaTime;
-			if (timeSinceLastBurn > BURN_RATE)
-			{
-				ApplyDamage(BURNING_DAMAGE, AttackType.Fire, DamageType.Burn);
-				timeSinceLastBurn = 0;
-			}
-		}
+		ApplyDamage(BURNING_DAMAGE, AttackType.Fire, DamageType.Burn);
 	}
 
 	private void SyncOnFire(bool wasOnFire, bool onFire)
@@ -259,10 +247,12 @@ public class Integrity : NetworkBehaviour, IHealth, IFireExposable, IRightClicka
 		this.onFire = onFire;
 		if (this.onFire)
 		{
+			UpdateManager.Add(PeriodicUpdateBurn, BURN_RATE);
 			burningObjectOverlay.Burn();
 		}
-		else if (!this.onFire)
+		else
 		{
+			UpdateManager.Remove(CallbackType.PERIODIC_UPDATE, PeriodicUpdateBurn);
 			burningObjectOverlay.StopBurning();
 		}
 	}
