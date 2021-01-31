@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Mirror;
+using Objects;
 
 public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllable
 {
@@ -47,8 +47,10 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 	public bool IsMoving => isServer ? IsMovingServer : IsMovingClient;
 
 	public PlayerMove playerMove;
-	private PlayerScript playerScript;
+	public PlayerScript playerScript;
 	private Directional playerDirectional;
+
+	public bool Step = false;
 
 	private Matrix Matrix => registerPlayer != null ? registerPlayer.Matrix : null;
 
@@ -402,7 +404,7 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 		{
 			pendingActions = new Queue<PlayerAction>();
 			UpdatePredictedState();
-			predictedSpeedClient = UIManager.WalkRun.running ? playerMove.RunSpeed : playerMove.WalkSpeed;
+			predictedSpeedClient = UIManager.Intent.Running ? playerMove.RunSpeed : playerMove.WalkSpeed;
 		}
 	}
 
@@ -411,13 +413,14 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 	/// </summary>
 	private bool didWiggle = false;
 
+	[Client]
 	public void TryEscapeContainer()
 	{
 		if (Camera2DFollow.followControl.target.TryGetComponent(out ClosetControl closet))
 		{
 			CmdTryEscapeCloset();
 		}
-		else if (Camera2DFollow.followControl.target.TryGetComponent(out Disposals.DisposalVirtualContainer disposalContainer))
+		else if (Camera2DFollow.followControl.target.TryGetComponent(out Objects.Disposals.DisposalVirtualContainer disposalContainer))
 		{
 			CmdTryEscapeDisposals();
 		}
@@ -440,7 +443,7 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 		if (pushPull?.parentContainer == null) return;
 		GameObject parentContainer = pushPull.parentContainer.gameObject;
 
-		if (parentContainer.TryGetComponent(out Disposals.DisposalVirtualContainer disposalContainer))
+		if (parentContainer.TryGetComponent(out Objects.Disposals.DisposalVirtualContainer disposalContainer))
 		{
 			disposalContainer.PlayerTryEscaping(gameObject);
 		}
@@ -506,7 +509,7 @@ public partial class PlayerSync : NetworkBehaviour, IPushable, IPlayerControllab
 			{
 				if (CommonInput.GetKeyDown(KeyCode.F7) && gameObject == PlayerManager.LocalPlayer)
 				{
-					PlayerSpawn.ServerSpawnDummy();
+					PlayerSpawn.ServerSpawnDummy(gameObject.transform);
 				}
 
 				if (serverState.Position != serverLerpState.Position)

@@ -15,11 +15,6 @@ PrefabInstance:
         type: 3}
     - target: {fileID: 4233841553354124691, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
         type: 3}
-      propertyPath: initialDescription
-      value: A reverse engineered weapon using syndicate technology.
-      objectReference: {fileID: 0}
-    - target: {fileID: 4233841553354124691, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
-        type: 3}
       propertyPath: initialName
       value: energy crossbow
       objectReference: {fileID: 0}
@@ -28,10 +23,20 @@ PrefabInstance:
       propertyPath: initialSize
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 4233841553354124691, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
+        type: 3}
+      propertyPath: initialDescription
+      value: A reverse engineered weapon using syndicate technology.
+      objectReference: {fileID: 0}
     - target: {fileID: 4335905146119127793, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
         type: 3}
       propertyPath: m_Name
       value: EnergyCrossbow
+      objectReference: {fileID: 0}
+    - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
         type: 3}
@@ -50,6 +55,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -62,16 +72,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4341391846075563909, guid: ba0d71e0e5bfbac4e974fefc4ad1e300,
         type: 3}

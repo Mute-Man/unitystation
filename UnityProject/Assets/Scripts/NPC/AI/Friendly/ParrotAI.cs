@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using WebSocketSharp;
 
-namespace NPC
+namespace Systems.MobAIs
 {
 	/// <summary>
 	/// AI brain for parrots
@@ -73,7 +73,6 @@ namespace NPC
 			//TODO use the actual chat api when it allows it!
 			Chat.AddLocalMsgToChat(
 				text,
-				gameObject.transform.position,
 				gameObject,
 				mobNameCap);
 			ChatBubbleManager.ShowAChatBubble(gameObject.transform, text);

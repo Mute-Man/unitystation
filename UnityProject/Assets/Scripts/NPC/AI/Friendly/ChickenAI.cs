@@ -1,14 +1,19 @@
 ﻿using System.Collections.Generic;
+using Items;
 using Items.Others;
 using UnityEngine;
+using AddressableReferences;
 
-namespace NPC
+namespace Systems.MobAIs
 {
 	/// <summary>
 	/// Generic AI for Chickens. Keep them happy and they will lay eggs!
 	/// </summary>
 	public class ChickenAI: GenericFriendlyAI, ICheckedInteractable<HandApply>
 	{
+
+		[SerializeField] private AddressableAudioSource EatFoodA = null;
+
 		[SerializeField, Tooltip("Check this if this chicken is a grown up chicken in age of laying eggs")]
 		private bool grownChicken = true;
 
@@ -95,7 +100,7 @@ namespace NPC
 			Inventory.ServerConsume(interaction.HandSlot, 1);
 			mood.OnFoodEaten();
 			SoundManager.PlayNetworkedAtPos(
-				"EatFood",
+				EatFoodA,
 				gameObject.RegisterTile().WorldPosition,
 				1f,
 				sourceObj: gameObject);

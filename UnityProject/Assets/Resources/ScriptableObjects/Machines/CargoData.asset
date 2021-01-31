@@ -13,61 +13,6 @@ MonoBehaviour:
   m_Name: CargoData
   m_EditorClassIdentifier: 
   Supplies:
-  - CategoryName: Kitchen
-    Supplies:
-    - OrderName: Beer Crate
-      CreditsCost: 700
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 4501053395374146654, guid: 1a8ca75092f9cdd4d9c6022e08419c9b, type: 3}
-      - {fileID: 4501053395374146654, guid: 1a8ca75092f9cdd4d9c6022e08419c9b, type: 3}
-      - {fileID: 4501053395374146654, guid: 1a8ca75092f9cdd4d9c6022e08419c9b, type: 3}
-      - {fileID: 4501053395374146654, guid: 1a8ca75092f9cdd4d9c6022e08419c9b, type: 3}
-      TotalCreditExport: 600
-    - OrderName: Meat kit
-      CreditsCost: 600
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
-      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
-      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
-      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
-      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
-      - {fileID: 7781396554342910705, guid: 229f1c93e0e4ada439cfe4b781f65997, type: 3}
-      TotalCreditExport: 500
-    - OrderName: Knife kit
-      CreditsCost: 500
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 7781396554342910705, guid: 229f1c93e0e4ada439cfe4b781f65997, type: 3}
-      - {fileID: 7781396554342910705, guid: 229f1c93e0e4ada439cfe4b781f65997, type: 3}
-      - {fileID: 7781396554342910705, guid: 229f1c93e0e4ada439cfe4b781f65997, type: 3}
-      TotalCreditExport: 500
-    - OrderName: Energy Crate
-      CreditsCost: 525
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 198778007159947886, guid: 42541a231596b9048846974c482128fe, type: 3}
-      - {fileID: 198778007159947886, guid: 42541a231596b9048846974c482128fe, type: 3}
-      - {fileID: 198778007159947886, guid: 42541a231596b9048846974c482128fe, type: 3}
-      - {fileID: 198778007159947886, guid: 42541a231596b9048846974c482128fe, type: 3}
-      - {fileID: 198778007159947886, guid: 42541a231596b9048846974c482128fe, type: 3}
-      TotalCreditExport: 525
-    - OrderName: Better Eyes Crate
-      CreditsCost: 600
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 3356521420407087850, guid: a105d8f8d8432f142ab521d175b783ec, type: 3}
-      - {fileID: 3356521420407087850, guid: a105d8f8d8432f142ab521d175b783ec, type: 3}
-      - {fileID: 3356521420407087850, guid: a105d8f8d8432f142ab521d175b783ec, type: 3}
-      - {fileID: 3356521420407087850, guid: a105d8f8d8432f142ab521d175b783ec, type: 3}
-      - {fileID: 3356521420407087850, guid: a105d8f8d8432f142ab521d175b783ec, type: 3}
-      TotalCreditExport: 525
   - CategoryName: Security
     Supplies:
     - OrderName: Handcuffs  Crate
@@ -95,36 +40,36 @@ MonoBehaviour:
       Crate: {fileID: 3660769828800606216, guid: 8e84a0677b6a4364386bae0efa717939,
         type: 3}
       Items:
-      - {fileID: 8582594776399167655, guid: 8aa9c1617fcf44905b26d836feca524f, type: 3}
-      - {fileID: 8582594776399167655, guid: 8aa9c1617fcf44905b26d836feca524f, type: 3}
-      - {fileID: 8582594776399167655, guid: 8aa9c1617fcf44905b26d836feca524f, type: 3}
+      - {fileID: 650305787758157290, guid: 4bd7026a3da7b0143b5fb4d06bc94a5f, type: 3}
+      - {fileID: 650305787758157290, guid: 4bd7026a3da7b0143b5fb4d06bc94a5f, type: 3}
+      - {fileID: 650305787758157290, guid: 4bd7026a3da7b0143b5fb4d06bc94a5f, type: 3}
       TotalCreditExport: 1650
-    - OrderName: machine-gun Crate
+    - OrderName: R550c PDW Crate
       CreditsCost: 5000
       Crate: {fileID: 3660769828800606216, guid: 8e84a0677b6a4364386bae0efa717939,
         type: 3}
       Items:
-      - {fileID: 8582594776399167655, guid: a74cbb38ab9ab7c459eef728c98b21f0, type: 3}
-      - {fileID: 8582594776399167655, guid: a74cbb38ab9ab7c459eef728c98b21f0, type: 3}
-      - {fileID: 8582594776399167655, guid: a74cbb38ab9ab7c459eef728c98b21f0, type: 3}
+      - {fileID: 5906183653279542145, guid: 176e0188c0d52184ca00dcaf9607abca, type: 3}
+      - {fileID: 5906183653279542145, guid: 176e0188c0d52184ca00dcaf9607abca, type: 3}
+      - {fileID: 5906183653279542145, guid: 176e0188c0d52184ca00dcaf9607abca, type: 3}
       TotalCreditExport: 750
-    - OrderName: Laser Gun Crate
+    - OrderName: Laser Carbine Crate
       CreditsCost: 4500
       Crate: {fileID: 3660769828800606216, guid: 8e84a0677b6a4364386bae0efa717939,
         type: 3}
       Items:
-      - {fileID: 6507000735928756314, guid: c8db81d5fc87fc5409a6f7c00e5ebc96, type: 3}
-      - {fileID: 6507000735928756314, guid: c8db81d5fc87fc5409a6f7c00e5ebc96, type: 3}
-      - {fileID: 6507000735928756314, guid: c8db81d5fc87fc5409a6f7c00e5ebc96, type: 3}
+      - {fileID: 7611817970648562498, guid: 7fd11f09765590540b2685a0dfa2b8ea, type: 3}
+      - {fileID: 7611817970648562498, guid: 7fd11f09765590540b2685a0dfa2b8ea, type: 3}
+      - {fileID: 7611817970648562498, guid: 7fd11f09765590540b2685a0dfa2b8ea, type: 3}
       TotalCreditExport: 750
-    - OrderName: Laser Pistol Crate
+    - OrderName: Energy Carbine Crate
       CreditsCost: 4000
       Crate: {fileID: 3660769828800606216, guid: 8e84a0677b6a4364386bae0efa717939,
         type: 3}
       Items:
-      - {fileID: 6507000735928756314, guid: 66e26e048c0ee0448878c27b37dc685f, type: 3}
-      - {fileID: 6507000735928756314, guid: 66e26e048c0ee0448878c27b37dc685f, type: 3}
-      - {fileID: 6507000735928756314, guid: 66e26e048c0ee0448878c27b37dc685f, type: 3}
+      - {fileID: 6733076708105069041, guid: d589c17f6fd91da4190edfdd2cb5aa53, type: 3}
+      - {fileID: 6733076708105069041, guid: d589c17f6fd91da4190edfdd2cb5aa53, type: 3}
+      - {fileID: 6733076708105069041, guid: d589c17f6fd91da4190edfdd2cb5aa53, type: 3}
       TotalCreditExport: 750
   - CategoryName: Medical
     Supplies:
@@ -183,8 +128,8 @@ MonoBehaviour:
       Crate: {fileID: 1191069438927925888, guid: 007d9f81d20c55d479d86a1d7d4343db,
         type: 3}
       Items:
-      - {fileID: 20384307089368758, guid: 371b9c216382844659c05791957b28c8, type: 3}
-      - {fileID: 20384307089368758, guid: 371b9c216382844659c05791957b28c8, type: 3}
+      - {fileID: 8560762587041295364, guid: a8b7436d80686f9448b83d34621b9e6d, type: 3}
+      - {fileID: 8560762587041295364, guid: a8b7436d80686f9448b83d34621b9e6d, type: 3}
       - {fileID: 7331803544451838430, guid: d554409601a0f744090f24e47955cb9a, type: 3}
       - {fileID: 7331803544451838430, guid: d554409601a0f744090f24e47955cb9a, type: 3}
       TotalCreditExport: 500
@@ -277,17 +222,6 @@ MonoBehaviour:
       - {fileID: 359432221073519209, guid: 4dddcb74ff9a3ee4ca69bc6d757dca03, type: 3}
       - {fileID: 8724836040044288808, guid: ba46a81cbd3cd9c4faea0e047fbae79f, type: 3}
       TotalCreditExport: 500
-    - OrderName: Donk Pocket Variety Crate
-      CreditsCost: 3300
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 5519980735549114617, guid: b2635e9d9a9147f499bb49f9e17c6acd, type: 3}
-      - {fileID: 4137765648563881622, guid: fae7c477fdabcd24ebbffd2e9718e4c5, type: 3}
-      - {fileID: 4858025108857819275, guid: f5d5f3f9ed71a7143a3add4cdabd5234, type: 3}
-      - {fileID: 7956709455914103835, guid: f3618afa1e3d9bd439013f5b56195388, type: 3}
-      - {fileID: 5775455268267556729, guid: 973f41e593e554c4aa1e447dc63808de, type: 3}
-      TotalCreditExport: 500
     - OrderName: Wet floor signs Crate
       CreditsCost: 800
       Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
@@ -321,23 +255,131 @@ MonoBehaviour:
       - {fileID: 8062332028689852436, guid: 8edc1f3642b9f28429c21e6c30566791, type: 3}
       - {fileID: 8062332028689852436, guid: 8edc1f3642b9f28429c21e6c30566791, type: 3}
       TotalCreditExport: 500
-  - CategoryName: Botany
+  - CategoryName: Food & Hydroponics
     Supplies:
-    - OrderName: Hydroponics Crate
-      CreditsCost: 800
-      Crate: {fileID: 7906645642866107620, guid: 24c173cd0caa7b94aa4882f68ba8d78e,
+    - OrderName: Alcohol & Coffee Vendor Refills
+      CreditsCost: 2000
+      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
         type: 3}
       Items:
-      - {fileID: 11639533463445157, guid: 301047244e720e040b17d641c872719d, type: 3}
-      - {fileID: 7274953645499099385, guid: 394037cafd8e7314993ff56030057547, type: 3}
-      - {fileID: 6096225575505558569, guid: d942e8739f8acdb42b1c0d42ab2f0055, type: 3}
-      - {fileID: 6384647378213985447, guid: 851aaf2916e98034aaf889c36f96ca30, type: 3}
-      - {fileID: 7288648939973306741, guid: a26a4eff862ae144dbd1631611c063b2, type: 3}
-      - {fileID: 4089708377625794130, guid: fc9c98d2b80c5ac4388684a5417cfb3a, type: 3}
-      - {fileID: 4383293123033439814, guid: 984636f7870a4214d90dcc30fd5ea101, type: 3}
-      - {fileID: 7929132545395035327, guid: 6b278dfd25eca3a458046704b9670b4c, type: 3}
-      - {fileID: 3611557936377049867, guid: 61c1ba86edcb8f745b758d73ea4725d4, type: 3}
-      - {fileID: 326547609064969591, guid: ed3cf51f5ac908c428c083a07596e441, type: 3}
+      - {fileID: 2991859853499052220, guid: 987af98a4bcb1e24bbffa24c28dab810, type: 3}
+      - {fileID: 9142150440339612764, guid: 47d3f801b00a01447bdceb8fe2c9142a, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Donk Pocket Variety Crate
+      CreditsCost: 4000
+      Crate: {fileID: 6021181062730950660, guid: 871c3d9267933674894b9bfb2f956c56,
+        type: 3}
+      Items:
+      - {fileID: 5775455268267556729, guid: 973f41e593e554c4aa1e447dc63808de, type: 3}
+      - {fileID: 7956709455914103835, guid: f3618afa1e3d9bd439013f5b56195388, type: 3}
+      - {fileID: 3714002003377255333, guid: 160baf50e4a27c24a8c1f40b3232c886, type: 3}
+      - {fileID: 549149814992460987, guid: e1a47ce478bf7d24dbf5ac3d3a9ced36, type: 3}
+      - {fileID: 4858025108857819275, guid: f5d5f3f9ed71a7143a3add4cdabd5234, type: 3}
+      - {fileID: 5519980735549114617, guid: b2635e9d9a9147f499bb49f9e17c6acd, type: 3}
+      - {fileID: 4137765648563881622, guid: fae7c477fdabcd24ebbffd2e9718e4c5, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Dinnerware Vendor Refill
+      CreditsCost: 4000
+      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
+        type: 3}
+      Items:
+      - {fileID: 5003903431476434660, guid: 6368adaf461713a46813d47be62c2331, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Exotic Seeds Crate
+      CreditsCost: 1500
+      Crate: {fileID: 6021181062730950660, guid: 871c3d9267933674894b9bfb2f956c56,
+        type: 3}
+      Items:
+      - {fileID: 223049139536807085, guid: ddaa7cb39d8f9b942961b4aae4d65658, type: 3}
+      - {fileID: 5797523842976606620, guid: 614cb7e0e128721409e9f8a61de29621, type: 3}
+      - {fileID: 7891588707496553622, guid: ab1442ccdc53ec149820ae45ec942a3a, type: 3}
+      - {fileID: 2663326238152022564, guid: ade1755b39122014e834e5d291d2179a, type: 3}
+      - {fileID: 4761385092838339003, guid: 103ef0639f3940544afdbbfc8215a99a, type: 3}
+      - {fileID: 6329053858852265869, guid: c1ce6fa13648705408c2308794f9ce69, type: 3}
+      - {fileID: 3521094987913139954, guid: 8ebe2d3c9a4ef5f4bb4e83301adadb66, type: 3}
+      - {fileID: 7690917261163495813, guid: f6b6f17027e814b4db18ad2cff338753, type: 3}
+      - {fileID: 6473116280690192913, guid: 468844fb60616b941940e0e60813be19, type: 3}
+      - {fileID: 6473116280690192913, guid: 468844fb60616b941940e0e60813be19, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Hydroponics Vendor Refills
+      CreditsCost: 2000
+      Crate: {fileID: 6021181062730950660, guid: 871c3d9267933674894b9bfb2f956c56,
+        type: 3}
+      Items:
+      - {fileID: 6145501849856939213, guid: 7e7a11b69474c2e4098f7ec4acc9f20a, type: 3}
+      - {fileID: 5478126468329474099, guid: b52bef604c5ebf045b3549d897a08478, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Imported Food Vendor Refills
+      CreditsCost: 2000
+      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
+        type: 3}
+      Items:
+      - {fileID: 7477498448512949268, guid: ce8d9e4648ed4794d91a815a070e4094, type: 3}
+      - {fileID: 1023378195920529956, guid: 64d6a4799de2602438ad6f10e698ec22, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Ingredients Crate
+      CreditsCost: 1000
+      Crate: {fileID: 7260015131607416311, guid: ed8901b8487af7841b732663341262ca,
+        type: 3}
+      Items:
+      - {fileID: 7224261289035261362, guid: 6c21e5deee1522b4799087cdd4b610ca, type: 3}
+      - {fileID: 7224261289035261362, guid: cdc45bf0e6a41f645adcd71af48f5b5e, type: 3}
+      - {fileID: 7224261289035261362, guid: 6051ed17cb496b142b37a44e5f1fbd41, type: 3}
+      - {fileID: 7224261289035261362, guid: e965d50fb2115f5468bac98589ebf2c0, type: 3}
+      - {fileID: 7974332974296437313, guid: 9b07804f49229264f9cf01474e5d10ed, type: 3}
+      - {fileID: 7974332974296437313, guid: 70ce2fd820cf04f47b2ff97c63a78aa5, type: 3}
+      - {fileID: 1779836936379840953, guid: dbbf6d75ddede15448d4f44a35e2b6e1, type: 3}
+      - {fileID: 1520232852812707528, guid: 283a683616266a84a99465971784e0f3, type: 3}
+      - {fileID: 1282568902990284921, guid: 56e0dbfa3b6f22e41bf078cec71d7eb9, type: 3}
+      - {fileID: 8223452375745627725, guid: a326b8be6d37c4a4ba068dbf1c296357, type: 3}
+      - {fileID: 8750944094386566729, guid: b29d3b3d0eac3a84d9ef700d10f41b3a, type: 3}
+      - {fileID: 8750944094386566729, guid: b29d3b3d0eac3a84d9ef700d10f41b3a, type: 3}
+      - {fileID: 8750944094386566729, guid: b29d3b3d0eac3a84d9ef700d10f41b3a, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Potted Plants Crate
+      CreditsCost: 700
+      Crate: {fileID: 6829341300379324721, guid: 6ecb8b1a0d8d9184fa74bdd3c7ded42d,
+        type: 3}
+      Items:
+      - {fileID: 6495039292157115771, guid: bd0b61b5f22871e40bdf20387ae9d642, type: 3}
+      - {fileID: 6495039292157115771, guid: bd0b61b5f22871e40bdf20387ae9d642, type: 3}
+      - {fileID: 6495039292157115771, guid: bd0b61b5f22871e40bdf20387ae9d642, type: 3}
+      - {fileID: 6495039292157115771, guid: bd0b61b5f22871e40bdf20387ae9d642, type: 3}
+      - {fileID: 6495039292157115771, guid: bd0b61b5f22871e40bdf20387ae9d642, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Snack Vendor Refill
+      CreditsCost: 1500
+      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
+        type: 3}
+      Items:
+      - {fileID: 4889044400386516301, guid: 1673a9fc3c1434d4e96ded34f8ab2bbe, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Seeds Crate
+      CreditsCost: 1000
+      Crate: {fileID: 6021181062730950660, guid: 871c3d9267933674894b9bfb2f956c56,
+        type: 3}
+      Items:
+      - {fileID: 7872250047666169019, guid: a8b053482da561b4eba3bd81d8fe51ab, type: 3}
+      - {fileID: 3241578132518458830, guid: f93f1ab0ed9820742b43e07cb9375aec, type: 3}
+      - {fileID: 4041351290112742493, guid: 0a1175404af7039419a7794cb4bda0d9, type: 3}
+      - {fileID: 4067919374657561001, guid: f3bdddfdb45d67a48b3be064a3169fd8, type: 3}
+      - {fileID: 6524648055843730005, guid: 4e6de775cebea9d4b959e8aea5b25b74, type: 3}
+      - {fileID: 4251335794183523180, guid: 650450916815dfb4ba0aa087a3006beb, type: 3}
+      - {fileID: 2775257405307013601, guid: e41afb7979b591443b008859f958eca6, type: 3}
+      - {fileID: 1053102236879009808, guid: 60b83b01df9880443809c84ab556dad6, type: 3}
+      - {fileID: 673951613084778289, guid: ffb8828049b890f43baeb7c15447d37b, type: 3}
+      - {fileID: 2454147907924021695, guid: e746d3505715fa14eb99a37456d99398, type: 3}
+      - {fileID: 5784119409934351270, guid: 4844235ecae1ba743ab9b40ce79104be, type: 3}
+      - {fileID: 7599149358166298399, guid: 625f31aec34e13f48a1ece855fc4fe87, type: 3}
+      - {fileID: 3279069433607158746, guid: 4f7ce98391b8ec54493a831134aa65be, type: 3}
+      - {fileID: 3655365403910077050, guid: b35a262356250504fbfa735d183f9998, type: 3}
+      TotalCreditExport: 750
+    - OrderName: Softdrink Vendor Refill
+      CreditsCost: 1000
+      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
+        type: 3}
+      Items:
+      - {fileID: 6786961899524531326, guid: 9ba56c018e6293b46893343ff4b8fb45, type: 3}
       TotalCreditExport: 750
   - CategoryName: Mining
     Supplies:
@@ -385,16 +427,16 @@ MonoBehaviour:
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
       TotalCreditExport: 500
     - OrderName: Cook Set
       CreditsCost: 650
       Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
         type: 3}
       Items:
-      - {fileID: 835768756810601639, guid: 357fbde8e937c49c6b4e0b33e089eb89, type: 3}
+      - {fileID: 4257228480532492980, guid: c564124daeebb4d479474858c16e6e3d, type: 3}
       - {fileID: 3011710637427380133, guid: 82223aa9f2653409893db380f44262de, type: 3}
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
       - {fileID: 7636118406116123594, guid: c1986e2665f9a413694ce37f09e0f17e, type: 3}
@@ -407,7 +449,7 @@ MonoBehaviour:
       Items:
       - {fileID: 7106618204054676533, guid: 3e5e43af50c3e4b2d9b5e5ccbbde3ea2, type: 3}
       - {fileID: 2679964424910470999, guid: a0035ec751052984f8f49ff76eadbb3d, type: 3}
-      - {fileID: 835768756810601639, guid: 357fbde8e937c49c6b4e0b33e089eb89, type: 3}
+      - {fileID: 4257228480532492980, guid: c564124daeebb4d479474858c16e6e3d, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       - {fileID: 3011710637427380133, guid: c842b429251c54792a95e292b838d034, type: 3}
       TotalCreditExport: 500
@@ -418,8 +460,8 @@ MonoBehaviour:
       Items:
       - {fileID: 3011710637427380133, guid: 8fd881065be8b411d84cfc10b38be725, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 6700281191928912403, guid: 875b93ae4ca4940928b3f39d632bfd34, type: 3}
-      - {fileID: 835768756810601639, guid: 357fbde8e937c49c6b4e0b33e089eb89, type: 3}
+      - {fileID: 4770095003443762374, guid: 5b262a7685fde474e9ad13d31742ab69, type: 3}
+      - {fileID: 4257228480532492980, guid: c564124daeebb4d479474858c16e6e3d, type: 3}
       - {fileID: 7106618204054676533, guid: 7a2370ed5124e4897ba86392a2d9052b, type: 3}
       - {fileID: 6373161644663410599, guid: 7cae22bda0476431ba677333bd759b73, type: 3}
       TotalCreditExport: 500
@@ -430,7 +472,7 @@ MonoBehaviour:
       Items:
       - {fileID: 3011710637427380133, guid: 489cb478de43746cda8af4fd63be9282, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 357fbde8e937c49c6b4e0b33e089eb89, type: 3}
+      - {fileID: 4257228480532492980, guid: c564124daeebb4d479474858c16e6e3d, type: 3}
       - {fileID: 3921521694364753778, guid: 34840ba56d91a4e4bb5c615fe3c2b1f3, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       TotalCreditExport: 500
@@ -440,7 +482,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
       - {fileID: 7106618204054676533, guid: 026678bf2f4d34e7a8aa23aab0a96c64, type: 3}
       - {fileID: 6404652678407139925, guid: abed35e9cfa734a00815cf8cda62687a, type: 3}
       - {fileID: 3011710637427380133, guid: a08b3d5119d894fcb917204c9c820035, type: 3}
@@ -451,7 +493,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 1393604165951937989, guid: 55e43c3f69415c540bcd3de664a3a52d, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 6404652678407139925, guid: 82493ba3850304e50a7d25606a4f59f1, type: 3}
       - {fileID: 3921521694364753778, guid: 625759ec27e444592b12922a179ac340, type: 3}
@@ -464,7 +506,7 @@ MonoBehaviour:
       Items:
       - {fileID: 3011710637427380133, guid: 6e6c876b4d53442588042c04884308f2, type: 3}
       - {fileID: 7106618204054676533, guid: 3e5e43af50c3e4b2d9b5e5ccbbde3ea2, type: 3}
-      - {fileID: 3708231617607487601, guid: dcb36ae56960eb34a8988e485be4515e, type: 3}
+      - {fileID: 3086768010532881252, guid: bc66478ed507f244cbcb4ab3af901297, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       TotalCreditExport: 500
     - OrderName: Chaplain Set
@@ -474,7 +516,7 @@ MonoBehaviour:
       Items:
       - {fileID: 3011710637427380133, guid: 46e9a65fa189a4ae98dc1686675a6fab, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
-      - {fileID: 835768756810601639, guid: 3d08b6dbf08774e8681378945dec4edf, type: 3}
+      - {fileID: 2720625993976664686, guid: 6c06d764ea0ea9e4f9dff0e83cbb46e6, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       TotalCreditExport: 500
     - OrderName: Curator Set
@@ -483,7 +525,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 455167e17d2dd4f24b32aaafea5e7fb2, type: 3}
+      - {fileID: 8981057523728524344, guid: 7938bbb2e51a7d946a40b7ba7145cb30, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 7636118406116123594, guid: 6fe473acd28e04fafba497e02a994da8, type: 3}
       - {fileID: 3921521694364753778, guid: b67b665e16e3047c28f852c453112321, type: 3}
@@ -495,7 +537,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 455167e17d2dd4f24b32aaafea5e7fb2, type: 3}
+      - {fileID: 8981057523728524344, guid: 7938bbb2e51a7d946a40b7ba7145cb30, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 3011710637427380133, guid: c9cafc4cfdf774b66b6d76a563646fd7, type: 3}
@@ -509,7 +551,7 @@ MonoBehaviour:
       - {fileID: 3011710637427380133, guid: efbc8c2ff833d4924a01c0a134819dd7, type: 3}
       - {fileID: 6373161644663410599, guid: 470aa22391333488fa49f383cc8c1a26, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
-      - {fileID: 835768756810601639, guid: 455167e17d2dd4f24b32aaafea5e7fb2, type: 3}
+      - {fileID: 8981057523728524344, guid: 7938bbb2e51a7d946a40b7ba7145cb30, type: 3}
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       TotalCreditExport: 500
     - OrderName: Shaft Miner Set
@@ -518,7 +560,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 9001442491608015058, guid: bed6dd4c42e234f4180cfa233fcf9027, type: 3}
-      - {fileID: 835768756810601639, guid: 0d2146fd19cca485491e9e744be0e129, type: 3}
+      - {fileID: 3244160619761875026, guid: cf85a1465112d724bb418b6d0b77d935, type: 3}
       - {fileID: 7106618204054676533, guid: afe0b0cc9e24249c1aaf8b7b2c4b3a3c, type: 3}
       - {fileID: 6373161644663410599, guid: 7cae22bda0476431ba677333bd759b73, type: 3}
       - {fileID: 3011710637427380133, guid: c8281f12859404623bffaa7c78584fb5, type: 3}
@@ -529,7 +571,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 6b9741feb21124d839f2f8e4554b6b17, type: 3}
+      - {fileID: 5430052309453734401, guid: 117efb08bc23a0440811d4743ae8e2a9, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 8526319777743718724, guid: 63e8f225c4bf1d647be06fb2f91c15aa, type: 3}
       - {fileID: 3011710637427380133, guid: 6ab2f9c28085a419ca49eda6e97a06cf, type: 3}
@@ -540,7 +582,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: cad7d826b673041f5b2b4d9b9d64aa09, type: 3}
+      - {fileID: 1598407484917689484, guid: 558f017ca8c1a6443a1b535454f5ee9f, type: 3}
       - {fileID: 7106618204054676533, guid: 33d5403cf4de64f558d4b1735fdf85b4, type: 3}
       - {fileID: 5406834678390223279, guid: c86653856a893cd4a90b1bcda7263a97, type: 3}
       - {fileID: 3011710637427380133, guid: 54c252491fc58478aac029a841777c90, type: 3}
@@ -551,7 +593,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: cad7d826b673041f5b2b4d9b9d64aa09, type: 3}
+      - {fileID: 1598407484917689484, guid: 558f017ca8c1a6443a1b535454f5ee9f, type: 3}
       - {fileID: 7106618204054676533, guid: 33d5403cf4de64f558d4b1735fdf85b4, type: 3}
       - {fileID: 9115997771601037915, guid: dfc0f23c4db66d144a03103586ce7619, type: 3}
       - {fileID: 3011710637427380133, guid: 604161a1d792749539a5f1b0eb6e4749, type: 3}
@@ -562,7 +604,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 34a45eaa0bb60420f8e508486a85c92f, type: 3}
+      - {fileID: 8972170866961157136, guid: 4d6289555a2e3b244ac981ef029dd7c8, type: 3}
       - {fileID: 7106618204054676533, guid: 33d5403cf4de64f558d4b1735fdf85b4, type: 3}
       - {fileID: 3897939628877172860, guid: b8dfc33d8571c5a4381cdbdbd51a40ad, type: 3}
       - {fileID: 3011710637427380133, guid: 05d3054c3617b467ea8e086e2969e172, type: 3}
@@ -573,7 +615,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: cad7d826b673041f5b2b4d9b9d64aa09, type: 3}
+      - {fileID: 1598407484917689484, guid: 558f017ca8c1a6443a1b535454f5ee9f, type: 3}
       - {fileID: 7106618204054676533, guid: 33d5403cf4de64f558d4b1735fdf85b4, type: 3}
       - {fileID: 1333716201451594390, guid: c90b3a12bf05beb4f8f488884e23db95, type: 3}
       - {fileID: 3011710637427380133, guid: aab6051d13dac4be8a3ca172d9b74051, type: 3}
@@ -584,7 +626,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 215db6bda96214667b1f3202245e7ced, type: 3}
+      - {fileID: 101163286922812358, guid: 1e817159ebc0bff4db52eae2aa6ff8b6, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 2589132781317910656, guid: ea30069284826614f92020b96bc32f78, type: 3}
       - {fileID: 3011710637427380133, guid: 14673e0d9505d4a20ba67712d7358daa, type: 3}
@@ -595,7 +637,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 1fbcb2849c5f146458ba2aa13634279c, type: 3}
+      - {fileID: 1972823673122749122, guid: 964c624e8bbfb7d478a90211afee99c9, type: 3}
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
       - {fileID: 1750313274439006309, guid: 933034bb80fc577419f86c7bb8e13a0e, type: 3}
       - {fileID: 3011710637427380133, guid: d39638a7abcdf4a25b189fa975eab5e7, type: 3}
@@ -606,7 +648,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 9acc02a92f57c48a6ab94a5f9cd68b57, type: 3}
+      - {fileID: 1972823673122749122, guid: 964c624e8bbfb7d478a90211afee99c9, type: 3}
       - {fileID: 9115997771601037915, guid: dfc0f23c4db66d144a03103586ce7619, type: 3}
       - {fileID: 7106618204054676533, guid: aa1e5a44ff182415dac90bed74ef8bfa, type: 3}
       - {fileID: 3011710637427380133, guid: 2a2d871db32f24302b1aeb03f3652c48, type: 3}
@@ -619,7 +661,7 @@ MonoBehaviour:
       Items:
       - {fileID: 6527078367214184808, guid: 9ece9b1c0b01fa46ab120b1b423b1739, type: 3}
       - {fileID: 4378271014137224303, guid: af6be5511dead5243992d41249e1f1c5, type: 3}
-      - {fileID: 835768756810601639, guid: e3f1e3ca1346b4530930972e42524982, type: 3}
+      - {fileID: 7253867937762778278, guid: bca0e835431cd114e816a5fda1861e64, type: 3}
       - {fileID: 7106618204054676533, guid: 67eaf03d3dc08490c85f77c1aedf4a15, type: 3}
       - {fileID: 1052293997073687485, guid: 4d1d96d4187b0497a91fd915d358d354, type: 3}
       - {fileID: 3011710637427380133, guid: 10db9e28e42d145e9bbb1b151ee172de, type: 3}
@@ -630,7 +672,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 6527078367214184808, guid: 9ece9b1c0b01fa46ab120b1b423b1739, type: 3}
-      - {fileID: 835768756810601639, guid: ce8ad09737e5d47c0876505a3366d37d, type: 3}
+      - {fileID: 8230638928493232175, guid: be396f8db64a5174394321d7f7e266f8, type: 3}
       - {fileID: 7106618204054676533, guid: 67eaf03d3dc08490c85f77c1aedf4a15, type: 3}
       - {fileID: 7636118406116123594, guid: 64e430f828cfc465ea88b8d6e6fecda4, type: 3}
       - {fileID: 3011710637427380133, guid: 669c8831af14a4225968399b65b23461, type: 3}
@@ -642,7 +684,7 @@ MonoBehaviour:
       Items:
       - {fileID: 6527078367214184808, guid: 9ece9b1c0b01fa46ab120b1b423b1739, type: 3}
       - {fileID: 3011710637427380133, guid: 7836d5b8852b74938820fb198f01e5ba, type: 3}
-      - {fileID: 835768756810601639, guid: ce8ad09737e5d47c0876505a3366d37d, type: 3}
+      - {fileID: 8230638928493232175, guid: be396f8db64a5174394321d7f7e266f8, type: 3}
       - {fileID: 7106618204054676533, guid: 67eaf03d3dc08490c85f77c1aedf4a15, type: 3}
       TotalCreditExport: 500
     - OrderName: Head of Security Set
@@ -652,7 +694,7 @@ MonoBehaviour:
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       - {fileID: 3011710637427380133, guid: d2a5503a9764c49ed9a7b1a5c4e4c547, type: 3}
-      - {fileID: 835768756810601639, guid: ff62b9235c6434fc0a2a11aafc40d036, type: 3}
+      - {fileID: 8853098269862845401, guid: b58e6dd405ed93f47a08824b63de9fd6, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: eaeac5365190b4842bedb2b846ff15da, type: 3}
       - {fileID: 6373161644663410599, guid: 7cae22bda0476431ba677333bd759b73, type: 3}
@@ -666,7 +708,7 @@ MonoBehaviour:
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       - {fileID: 3011710637427380133, guid: e6fa54b0b29a6437eb102c7605b5dab3, type: 3}
-      - {fileID: 5437448505016987486, guid: 3f0da6473d897f11f88cf172ed0c5f30, type: 3}
+      - {fileID: 3866854686736633298, guid: 760ad04c7b18eab4685694f1f5de66e9, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: eaeac5365190b4842bedb2b846ff15da, type: 3}
       - {fileID: 6373161644663410599, guid: 7cae22bda0476431ba677333bd759b73, type: 3}
@@ -678,7 +720,7 @@ MonoBehaviour:
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
       - {fileID: 3011710637427380133, guid: e6fa54b0b29a6437eb102c7605b5dab3, type: 3}
-      - {fileID: 5437448505016987486, guid: 3f0da6473d897f11f88cf172ed0c5f30, type: 3}
+      - {fileID: 3866854686736633298, guid: 760ad04c7b18eab4685694f1f5de66e9, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: eaeac5365190b4842bedb2b846ff15da, type: 3}
       - {fileID: 6373161644663410599, guid: 7cae22bda0476431ba677333bd759b73, type: 3}
@@ -691,7 +733,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 5437448505016987486, guid: 3f0da6473d897f11f88cf172ed0c5f30, type: 3}
+      - {fileID: 3866854686736633298, guid: 760ad04c7b18eab4685694f1f5de66e9, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 6373161644663410599, guid: 470aa22391333488fa49f383cc8c1a26, type: 3}
@@ -705,7 +747,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4188245363048309518, guid: da93b0f7c392d46ba85123e2516cfa49, type: 3}
-      - {fileID: 835768756810601639, guid: 3b2e7aa1855a1454ab8d845d49fc8ff6, type: 3}
+      - {fileID: 7253867937762778278, guid: 7e01e1cf7e220dd4c89448d8eb917418, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: 3e5e43af50c3e4b2d9b5e5ccbbde3ea2, type: 3}
       - {fileID: 7636118406116123594, guid: aec4b97408d594f4d91c03418d9a457f, type: 3}
@@ -717,7 +759,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 4977207862586972967, guid: 239b294a1763f4db3b815f580ce23521, type: 3}
-      - {fileID: 835768756810601639, guid: abc31c8bb060f48aa9503d37fd4afb9b, type: 3}
+      - {fileID: 4887315118910892487, guid: 18829f9c177e97545abf088656129c6e, type: 3}
       - {fileID: 3431291279286482953, guid: 0c3e7a0b25eff4d33a4f511cfc36b5d9, type: 3}
       - {fileID: 7106618204054676533, guid: f61a15e56150d45e78d9458034719cbb, type: 3}
       - {fileID: 7509314716746909319, guid: b0a94fc3923d35042b9bfbd733b953e4, type: 3}
@@ -747,12 +789,12 @@ MonoBehaviour:
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
-      - {fileID: 2819670291326673133, guid: 09868dc1147587f4191af0a4defd8c1d, type: 3}
-      - {fileID: 2819670291326673133, guid: 09868dc1147587f4191af0a4defd8c1d, type: 3}
-      - {fileID: 2819670291326673133, guid: 09868dc1147587f4191af0a4defd8c1d, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
+      - {fileID: 8687924225242013247, guid: 9ad3756f014fe4f4c9aa35bf9b523a1a, type: 3}
+      - {fileID: 8687924225242013247, guid: 9ad3756f014fe4f4c9aa35bf9b523a1a, type: 3}
+      - {fileID: 8687924225242013247, guid: 9ad3756f014fe4f4c9aa35bf9b523a1a, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
       TotalCreditExport: 500
     - OrderName: Firefighting Crate
       CreditsCost: 1000
@@ -761,8 +803,8 @@ MonoBehaviour:
       Items:
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
       - {fileID: 5734849685452875998, guid: 6f371050bff8b32438f91c7c680900bb, type: 3}
       - {fileID: 5734849685452875998, guid: 6f371050bff8b32438f91c7c680900bb, type: 3}
       - {fileID: 7914350351518715449, guid: 908afbc5b9f871148b5ccd0b81bd147f, type: 3}
@@ -774,7 +816,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
       - {fileID: 2833764884087251606, guid: 63c3fd2e57a93dc4a921082eac8835ef, type: 3}
       - {fileID: 5285738701257476823, guid: 5b03000bed50be045b14e7dc9186fd97, type: 3}
       - {fileID: 7106618204054676533, guid: afe0b0cc9e24249c1aaf8b7b2c4b3a3c, type: 3}
@@ -786,7 +828,7 @@ MonoBehaviour:
         type: 3}
       Items:
       - {fileID: 6404652678407139925, guid: dce8e376d2eca40eabe3f055b41a021c, type: 3}
-      - {fileID: 132773863777131159, guid: 7a4abc9d5e36bb14cb203248884ef037, type: 3}
+      - {fileID: 1527266067893101175, guid: 5f8f71237e56b5244a4119555cda299e, type: 3}
       - {fileID: 7636118406116123594, guid: ab405146ae5965447b922b2cf95bc7fe, type: 3}
       - {fileID: 7636118406116123594, guid: ab405146ae5965447b922b2cf95bc7fe, type: 3}
       - {fileID: 3921521694364753778, guid: e3a0238ef8323eb4caadcb2e19bbcf41, type: 3}
@@ -1169,7 +1211,7 @@ MonoBehaviour:
       Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
         type: 3}
       Items:
-      - {fileID: 266178104534119887, guid: 1aff7456d9fe31693a6705676cb722f6, type: 3}
+      - {fileID: 8283241700425776467, guid: 5b03a0d328244a244bde82abc2b3e98a, type: 3}
       TotalCreditExport: 500
     - OrderName: Water Tank
       CreditsCost: 600
@@ -1186,18 +1228,6 @@ MonoBehaviour:
       TotalCreditExport: 500
   - CategoryName: Miscellaneous
     Supplies:
-    - OrderName: Monkey Crate
-      CreditsCost: 550
-      Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,
-        type: 3}
-      Items:
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      - {fileID: 7785875528613525472, guid: 4569acb573d85cc4d851531fdaedc4d2, type: 3}
-      TotalCreditExport: 500
     - OrderName: Robusting Crate
       CreditsCost: 1000
       Crate: {fileID: 8618853659674527056, guid: 1d35052f4fc2cad4d8226d1a63e4a1b3,

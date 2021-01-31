@@ -17,13 +17,13 @@ namespace Weapons.Projectiles.Behaviours
 		[Tooltip("Tile layers to damage(Walls, Window, etc.)")]
 		[SerializeField] private CheckLayerType layerType = null;
 
-		public bool Interact(RaycastHit2D hit, InteractableTiles interactableTiles, Vector3 worldPosition)
+		public bool Interact(MatrixManager.CustomPhysicsHit hit, InteractableTiles interactableTiles, Vector3 worldPosition)
 		{
 			var layers = interactableTiles.MetaTileMap.DamageableLayers;
 			foreach (var layer in layers)
 			{
 				if(layerType.CheckType(layer.LayerType) == false) continue;
-
+				if (damageData == null) return true;
 				if (layer.TilemapDamage.ApplyDamage(damageData.Damage, damageData.AttackType, worldPosition) <= 0) continue;
 
 				return true;

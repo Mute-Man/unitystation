@@ -1,8 +1,7 @@
-
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
+using Objects.Wallmounts;
 
 /// <summary>
 /// Escape-related part of GameManager
@@ -120,15 +119,26 @@ public partial class GameManager
 				EndRound();
 			}
 
-			if (status == EscapeShuttleStatus.DockedStation)
+			if (status == EscapeShuttleStatus.DockedStation && !primaryEscapeShuttle.hostileEnvironment)
 			{
 				beenToStation = true;
-				SoundManager.PlayNetworked("ShuttleDocked");
+				SoundManager.PlayNetworked(SingletonSOSounds.Instance.ShuttleDocked);
 				Chat.AddSystemMsgToChat($"<color=white>Escape shuttle has arrived! Crew has {TimeSpan.FromSeconds(ShuttleDepartTime).Minutes} minutes to get on it.</color>", MatrixManager.MainStationMatrix);
 				//should be changed to manual send later
 				StartCoroutine( SendEscapeShuttle( ShuttleDepartTime ) );
 			}
+			else if (status == EscapeShuttleStatus.DockedStation && primaryEscapeShuttle.hostileEnvironment)
+			{
+				beenToStation = true;
+				SoundManager.PlayNetworked(SingletonSOSounds.Instance.ShuttleDocked);
+				Chat.AddSystemMsgToChat($"<color=white>Escape shuttle has arrived! The shuttle <color=#FF151F>cannot</color> leave the station due to the hostile environment!</color>", MatrixManager.MainStationMatrix);
+			}
 		} );
+	}
+
+	public void ForceSendEscapeShuttleFromStation()
+	{
+		StartCoroutine( SendEscapeShuttle( ShuttleDepartTime ) );
 	}
 
 	private void TrackETA(int eta)

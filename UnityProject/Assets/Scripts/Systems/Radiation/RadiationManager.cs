@@ -4,30 +4,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.Profiling;
 
-namespace Radiation
+namespace Systems.Radiation
 {
 	public class RadiationManager : MonoBehaviour
 	{
 		public List<RadiationPulse> PulseQueue = new List<RadiationPulse>();
 		private List<RadiationPulse> WorkingPulseQueue = new List<RadiationPulse>();
 
-		public static RadiationManager Instance
-		{
-			get
-			{
-				if (instance == null)
-				{
-					instance = FindObjectOfType<RadiationManager>();
-				}
-
-				return instance;
-			}
-			set { instance = value; }
-		}
-
-		private static RadiationManager instance;
+		public static RadiationManager Instance {get; private set;}
 
 		public bool Running { get; private set; }
 		public float MSSpeed = 100;
@@ -36,9 +23,9 @@ namespace Radiation
 		{
 			StopSim();
 		}
-
 		void OnEnable()
 		{
+			Instance = this;
 			EventManager.AddHandler(EVENT.RoundStarted, StartSim);
 			EventManager.AddHandler(EVENT.RoundEnded, StopSim);
 		}
@@ -257,7 +244,6 @@ namespace Radiation
 				}
 			}
 		}
-
 
 		public void RequestPulse(Matrix Matrix, Vector3Int Location, float Strength, int InSourceID)
 		{

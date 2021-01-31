@@ -1,6 +1,7 @@
 ﻿using Mirror;
 using System.Collections.Generic;
 using UnityEngine;
+using Objects;
 
 namespace Gateway
 {
@@ -77,7 +78,7 @@ namespace Gateway
 				var previous = node.Previous?.Value;
 
 				//Disconnect pulling to make it not be a problem
-				currentObj.CmdStopPulling();
+				currentObj.ServerStopPulling();
 
 				//Transport current
 				TransportObject(currentObj, transportTo);

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Entries:
   - NamedSlot: 12
-    Prefab: {fileID: 835768756810601639, guid: 1fbcb2849c5f146458ba2aa13634279c, type: 3}
+    Prefab: {fileID: 1972823673122749122, guid: 964c624e8bbfb7d478a90211afee99c9,
+      type: 3}
   - NamedSlot: 3
     Prefab: {fileID: 7106618204054676533, guid: 33d5403cf4de64f558d4b1735fdf85b4,
       type: 3}
@@ -29,6 +30,9 @@ MonoBehaviour:
       type: 3}
   - NamedSlot: 1
     Prefab: {fileID: 9033961008344408314, guid: 5981f27a31b4a3a4ab24b1f0e533c89e,
+      type: 3}
+  - NamedSlot: 16
+    Prefab: {fileID: 3486841869076151784, guid: a7f5957552c2a364e8df31a14194d6ad,
       type: 3}
   skirtVariant: {fileID: 5032308470899878357, guid: 52c38364bd286a7498241ec0af93ed9e,
     type: 3}

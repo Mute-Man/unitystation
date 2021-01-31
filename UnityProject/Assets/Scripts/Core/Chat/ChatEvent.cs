@@ -30,7 +30,15 @@ public enum ChatChannel
 	[Description("")] 	Combat 		= 1 << 16,
 	[Description("")]	Warning		= 1 << 17,
 	[Description("")]	Action		= 1 << 18,
-	[Description("")]	Admin		= 1 << 19
+	[Description("")]	Admin		= 1 << 19,
+	[Description("")]	Blob		= 1 << 20
+}
+
+public static class Channels
+{
+	public static ChatChannel RadioChannels = ChatChannel.Common | ChatChannel.Command | ChatChannel.Syndicate
+			| ChatChannel.Engineering | ChatChannel.Supply | ChatChannel.Medical
+			| ChatChannel.Science | ChatChannel.Security | ChatChannel.Service;
 }
 
 /// <summary>
@@ -56,7 +64,7 @@ public enum ChatModifier
 	State = 1 << 22, // Silicon speaking
 	Query = 1 << 23, // Silicon querying
 	ColdlyState = 1 << 24, // Automated Announcer speaking
-	
+
 	//Speech mutations, these should happen before drunk, stutter and that kind of thing!
 	Canadian = 1 << 11,
 	French = 1 << 12,
@@ -81,6 +89,7 @@ public class ChatEvent
 	public double timestamp;
 	public Vector3 position = TransformState.HiddenPos;
 	public GameObject originator;
+	public bool stripTags = true;
 
 	/// <summary>
 	/// Send chat message only to those on this matrix

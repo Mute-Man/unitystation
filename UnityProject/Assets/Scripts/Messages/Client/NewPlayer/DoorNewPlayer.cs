@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Messages.Client;
 using Mirror;
+using Doors;
 
 public class DoorNewPlayer: ClientMessage
 {
@@ -27,17 +28,5 @@ public class DoorNewPlayer: ClientMessage
 		};
 		msg.Send();
 		return msg;
-	}
-
-	public override void Deserialize(NetworkReader reader)
-	{
-		base.Deserialize(reader);
-		Door = reader.ReadUInt32();
-	}
-
-	public override void Serialize(NetworkWriter writer)
-	{
-		base.Serialize(writer);
-		writer.WriteUInt32(Door);
 	}
 }

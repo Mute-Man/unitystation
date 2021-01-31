@@ -6,6 +6,8 @@ using DiscordWebhook;
 using UI.CharacterCreator;
 using UnityEngine;
 using UnityEngine.Serialization;
+using NaughtyAttributes;
+using Managers;
 
 namespace GameModes
 {
@@ -76,6 +78,16 @@ namespace GameModes
 		/// </summary>
 		public int MinAntags => minAntags;
 
+		[Tooltip("The maximum amount of antags spawned in the gamemode.")]
+		[SerializeField]
+		[Min(1)]
+		private int maxAntags = 100;
+		/// <summary>
+		/// The maximum amount of antags spawned in the gamemode.
+		/// If <see cref="requiresMinAntags"/> is false, the number of chosen antags will be rounded up to this number.
+		/// </summary>
+		public int MaxAntags => maxAntags;
+
 		[Tooltip("Is the game mode possible if the player count multiplied by the antagRatio doesn't meet the minAntags? " +
 		         "E.g. If true, when antagRatio is 0.2 and minAntags is 1, you need at least 5 players to start the game mode.")]
 		[SerializeField]
@@ -104,16 +116,6 @@ namespace GameModes
 		/// </summary>
 		public bool MidRoundAntags => midRoundAntags;
 
-		[FormerlySerializedAs("chooseAntagsBeforeJobs")]
-		[Tooltip("Should antags be allocated a job? If true, will choose antags after allocating jobs.")]
-		[SerializeField]
-		private bool allocateJobsToAntags = false;
-		/// <summary>
-		/// Should antags be allocated a job?
-		/// If true, will choose antags after allocating jobs.
-		/// </summary>
-		public bool AllocateJobsToAntags => allocateJobsToAntags;
-
 		[Tooltip("The possible antagonists for this game mode")]
 		[SerializeField]
 		private List<Antagonist> possibleAntags = null;
@@ -122,8 +124,18 @@ namespace GameModes
 		/// </summary>
 		public List<Antagonist> PossibleAntags => possibleAntags;
 
+		[FormerlySerializedAs("chooseAntagsBeforeJobs")]
+		[Tooltip("Should antags be allocated a job? If true, will choose antags after allocating jobs.")]
+		[SerializeField, BoxGroup("Job Allocation")]
+		private bool allocateJobsToAntags = false;
+		/// <summary>
+		/// Should antags be allocated a job?
+		/// If true, will choose antags after allocating jobs.
+		/// </summary>
+		public bool AllocateJobsToAntags => allocateJobsToAntags;
+
 		[Tooltip("The JobTypes that cannot be chosen as antagonists for this game mode")]
-		[SerializeField]
+		[SerializeField, BoxGroup("Job Allocation"), ShowIf(nameof(AllocateJobsToAntags))]
 		private List<JobType> nonAntagJobTypes = new List<JobType>
 		{
 			JobType.CAPTAIN,
@@ -212,7 +224,7 @@ namespace GameModes
 
 			// Are there enough antags already?
 			int newPlayerCount = PlayerList.Instance.InGamePlayers.Count + 1;
-			var expectedAntagCount = (int)Math.Floor(newPlayerCount * AntagRatio);
+			var expectedAntagCount = Math.Min((int)Math.Floor(newPlayerCount * AntagRatio), maxAntags);
 			return AntagManager.Instance.AntagCount < expectedAntagCount;
 		}
 
@@ -346,6 +358,8 @@ namespace GameModes
 			{
 				SpawnAntag(spawnReq);
 			}
+			GameManager.Instance.CurrentRoundState = RoundState.Started;
+			EventManager.Broadcast(EVENT.RoundStarted, true);
 		}
 
 		/// <summary>
@@ -353,7 +367,7 @@ namespace GameModes
 		/// </summary>
 		private int CalculateAntagCount(int playerCount)
 		{
-			var antagCount = (int)Math.Floor(playerCount * antagRatio);
+			var antagCount = Math.Min((int)Math.Floor(playerCount * antagRatio), maxAntags);
 			// If RequiresMinAntags is true then round up to MinAntags if antagCount is below
 			return RequiresMinAntags ? Math.Max(MinAntags, antagCount) : antagCount;
 		}

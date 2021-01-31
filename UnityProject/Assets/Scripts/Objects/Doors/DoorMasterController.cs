@@ -4,6 +4,7 @@ using System.Linq;
 using Doors.Modules;
 using Mirror;
 using UnityEngine;
+using Systems.Electricity;
 
 //TODO: Need to reimplement hacking with this system. Might be a nightmare, dk yet.
 namespace Doors
@@ -386,7 +387,7 @@ namespace Doors
 				return;
 			}
 
-			if (MatrixManager.IsPassableAt(
+			if (MatrixManager.IsPassableAtAllMatrices(
 				registerTile.WorldPositionServer,
 				registerTile.WorldPositionServer,
 				isServer: true,

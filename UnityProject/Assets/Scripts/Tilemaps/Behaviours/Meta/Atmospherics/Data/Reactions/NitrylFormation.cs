@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Atmospherics;
 using UnityEngine;
 
-namespace Atmospherics
+namespace Systems.Atmospherics
 {
 	public class NitrylFormation : Reaction
 	{
@@ -12,7 +11,7 @@ namespace Atmospherics
 			throw new System.NotImplementedException();
 		}
 
-		public float React(ref GasMix gasMix, Vector3 tilePos)
+		public void React(GasMix gasMix, Vector3 tilePos, Matrix matrix)
 		{
 			var oldHeatCap = gasMix.WholeHeatCapacity;
 
@@ -23,7 +22,7 @@ namespace Atmospherics
 			if (gasMix.GetMoles(Gas.Oxygen) - reactionEfficiency < 0 || gasMix.GetMoles(Gas.Nitrogen) - reactionEfficiency < 0 || gasMix.GetMoles(Gas.BZ) - reactionEfficiency < 0)
 			{
 				//No reaction
-				return 0f;
+				return;
 			}
 
 			gasMix.RemoveGas(Gas.Oxygen, 2 * reactionEfficiency);
@@ -36,8 +35,6 @@ namespace Atmospherics
 			{
 				gasMix.SetTemperature(Mathf.Max((gasMix.Temperature * oldHeatCap - energyUsed)/gasMix.WholeHeatCapacity, 2.7f));
 			}
-
-			return 0f;
 		}
 	}
 }

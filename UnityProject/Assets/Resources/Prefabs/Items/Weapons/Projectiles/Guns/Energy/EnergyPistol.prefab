@@ -45,6 +45,12 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4387921172387687617, guid: d589c17f6fd91da4190edfdd2cb5aa53,
+        type: 3}
+      propertyPath: ammoPrefab
+      value: 
+      objectReference: {fileID: 6043667599440289896, guid: bd3d8231022e86e498568076ae000883,
+        type: 3}
     - target: {fileID: 4979405696378388488, guid: d589c17f6fd91da4190edfdd2cb5aa53,
         type: 3}
       propertyPath: m_Sprite
@@ -64,6 +70,11 @@ PrefabInstance:
         type: 2}
     - target: {fileID: 6601480061218639507, guid: d589c17f6fd91da4190edfdd2cb5aa53,
         type: 3}
+      propertyPath: initialTraits.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6601480061218639507, guid: d589c17f6fd91da4190edfdd2cb5aa53,
+        type: 3}
       propertyPath: initialDescription
       value: 'A small, pistol-sized energy carbine with a built-in flashlight. It
         has two settings: disable and kill.'
@@ -78,6 +89,12 @@ PrefabInstance:
       propertyPath: initialSize
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 6601480061218639507, guid: d589c17f6fd91da4190edfdd2cb5aa53,
+        type: 3}
+      propertyPath: initialTraits.Array.data[3]
+      value: 
+      objectReference: {fileID: 11400000, guid: e8985b79e43678340a5da4ca4ef37d67,
+        type: 2}
     - target: {fileID: 6693620148964760645, guid: d589c17f6fd91da4190edfdd2cb5aa53,
         type: 3}
       propertyPath: m_AssetId
@@ -165,7 +182,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300002, guid: b999158183fc78d4ca1847d854bb37b9,
+      objectReference: {fileID: 21300000, guid: b999158183fc78d4ca1847d854bb37b9,
         type: 3}
     - target: {fileID: 7606129215582619395, guid: d589c17f6fd91da4190edfdd2cb5aa53,
         type: 3}

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using UnityEngine;
 using Mirror;
+using Systems;
+using Systems.Spawns;
 
 /// <summary>
 /// Main API for dealing with spawning players and related things.
@@ -30,13 +30,9 @@ public static class PlayerSpawn
 
 		// TODO: add a nice cutscene/animation for the respawn transition
 		var newPlayer = ServerSpawnInternal(conn, occupation, characterSettings, null);
-		if (newPlayer)
+		if (newPlayer != null && occupation.IsCrewmember)
 		{
-			if (occupation.JobType != JobType.SYNDICATE &&
-				occupation.JobType != JobType.AI)
-			{
-				SecurityRecordsManager.Instance.AddRecord(newPlayer.GetComponent<PlayerScript>(), occupation.JobType);
-			}
+			CrewManifestManager.Instance.AddMember(newPlayer.GetComponent<PlayerScript>(), occupation.JobType);
 		}
 
 		if (SpawnEvent != null)
@@ -68,24 +64,20 @@ public static class PlayerSpawn
 	/// <param name="forMind"></param>
 	public static void ServerRespawnPlayer(Mind forMind)
 	{
-		if (forMind.IsSpectator)
-			return;
-
 		//get the settings from the mind
 		var occupation = forMind.occupation;
 		var oldBody = forMind.GetCurrentMob();
 		var connection = oldBody.GetComponent<NetworkIdentity>().connectionToClient;
 		var settings = oldBody.GetComponent<PlayerScript>().characterSettings;
-		var oldGhost = forMind.ghost;
-		forMind.stepType = GetStepType(forMind.body);
 
+		var player = oldBody.Player();
+		var oldGhost = forMind.ghost;
 		ServerSpawnInternal(connection, occupation, settings, forMind, willDestroyOldBody: oldGhost != null);
 
 		if (oldGhost)
 		{
 			Despawn.ServerSingle(oldGhost.gameObject);
 		}
-
 	}
 
 	/// <summary>
@@ -103,17 +95,10 @@ public static class PlayerSpawn
 		var occupation = forMind.occupation;
 		var connection = oldBody.GetComponent<NetworkIdentity>().connectionToClient;
 		var settings = oldBody.GetComponent<PlayerScript>().characterSettings;
-		forMind.stepType = GetStepType(forMind.body);
 
 		ServerSpawnInternal(connection, occupation, settings, forMind, worldPosition, false);
 	}
 
-	//Jobs that should always use their own spawn points regardless of current round time
-	private static readonly ReadOnlyCollection<JobType> NEVER_SPAWN_ARRIVALS_JOBS = new ReadOnlyCollection<JobType>(new List<JobType>
-		{
-			JobType.AI,
-			JobType.SYNDICATE
-		});
 	//Time to start spawning players at arrivals
 	private static readonly DateTime ARRIVALS_SPAWN_TIME = new DateTime().AddHours(12).AddMinutes(2);
 
@@ -142,19 +127,18 @@ public static class PlayerSpawn
 		{
 			Transform spawnTransform;
 			//Spawn normal location for special jobs or if less than 2 minutes passed
-			if (GameManager.Instance.stationTime < ARRIVALS_SPAWN_TIME || NEVER_SPAWN_ARRIVALS_JOBS.Contains(occupation.JobType))
+			if (GameManager.Instance.stationTime < ARRIVALS_SPAWN_TIME || occupation.LateSpawnIsArrivals == false)
 			{
-				 spawnTransform = GetSpawnForJob(occupation.JobType);
+				spawnTransform = SpawnPoint.GetRandomPointForJob(occupation.JobType);
 			}
 			else
 			{
-				spawnTransform = GetSpawnForLateJoin(occupation.JobType);
+				spawnTransform = SpawnPoint.GetRandomPointForLateSpawn();
 				//Fallback to assistant spawn location if none found for late join
-				if(spawnTransform == null && occupation.JobType != JobType.NULL)
+				if (spawnTransform == null && occupation.JobType != JobType.NULL)
 				{
-					spawnTransform = GetSpawnForJob(JobType.ASSISTANT);
+					spawnTransform = SpawnPoint.GetRandomPointForJob(JobType.ASSISTANT);
 				}
-
 			}
 
 			if (spawnTransform == null)
@@ -244,7 +228,9 @@ public static class PlayerSpawn
 		var occupation = mind.occupation;
 		var settings = ps.characterSettings;
 		ServerTransferPlayer(viewer.connectionToClient, body, viewer.gameObject, EVENT.PlayerRejoined, settings);
-		body.GetComponent<PlayerScript>().playerNetworkActions.ReenterBodyUpdates();
+		ps = body.GetComponent<PlayerScript>();
+		ps.playerNetworkActions.ReenterBodyUpdates();
+		ps.mind.ResendSpellActions();
 	}
 
 	/// <summary>
@@ -288,7 +274,7 @@ public static class PlayerSpawn
 		if (spawnPosition == TransformState.HiddenPos)
 		{
 			//spawn ghost at occupation location if we can't determine where their body is
-			Transform spawnTransform = GetSpawnForJob(forMind.occupation.JobType);
+			Transform spawnTransform = SpawnPoint.GetRandomPointForJob(forMind.occupation.JobType);
 			if (spawnTransform == null)
 			{
 				Logger.LogErrorFormat("Unable to determine spawn position for occupation {1}. Cannot spawn ghost.", Category.ItemSpawn,
@@ -326,7 +312,7 @@ public static class PlayerSpawn
 	public static void ServerSpawnGhost(JoinedViewer joinedViewer, CharacterSettings characterSettings)
 	{
 		//Hard coding to assistant
-		Vector3Int spawnPosition = GetSpawnForJob(JobType.ASSISTANT).transform.position.CutToInt();
+		Vector3Int spawnPosition = SpawnPoint.GetRandomPointForJob(JobType.ASSISTANT).transform.position.CutToInt();
 
 		//Get spawn location
 		var matrixInfo = MatrixManager.AtPoint(spawnPosition, true);
@@ -343,9 +329,10 @@ public static class PlayerSpawn
 	/// <summary>
 	/// Spawns an assistant dummy
 	/// </summary>
-	public static void ServerSpawnDummy()
+	public static void ServerSpawnDummy(Transform spawnTransform = null)
 	{
-		Transform spawnTransform = GetSpawnForJob(JobType.ASSISTANT);
+		if(spawnTransform == null)
+			spawnTransform = SpawnPoint.GetRandomPointForJob(JobType.ASSISTANT);
 		if (spawnTransform != null)
 		{
 			var dummy = ServerCreatePlayer(spawnTransform.position.RoundToInt());
@@ -387,6 +374,12 @@ public static class PlayerSpawn
 
 
 		return player;
+	}
+
+	public static void ServerTransferPlayerToNewBody(NetworkConnection conn, GameObject newBody, GameObject oldBody,
+		EVENT eventType, CharacterSettings characterSettings, bool willDestroyOldBody = false)
+	{
+		ServerTransferPlayer(conn, newBody, oldBody, eventType, characterSettings, willDestroyOldBody);
 	}
 
 	/// <summary>
@@ -432,7 +425,7 @@ public static class PlayerSpawn
 			// {
 			// 	NetworkServer.ReplacePlayerForConnection(new NetworkConnectionToClient(0), oldBody);
 			// }
-			TriggerEventMessage.Send(newBody, eventType);
+			TriggerEventMessage.SendTo(newBody, eventType);
 
 			//can observe their new inventory
 			newBody.GetComponent<ItemStorage>()?.ServerAddObserverPlayer(newBody);
@@ -470,49 +463,21 @@ public static class PlayerSpawn
 		}
 	}
 
-	private static Transform GetSpawnForLateJoin(JobType jobType)
-	{
-		if (jobType == JobType.NULL)
-		{
-			return null;
-		}
-		List<SpawnPoint> spawnPoints = CustomNetworkManager.startPositions.Select(x => x.GetComponent<SpawnPoint>())
-			.Where(x => x.Department == JobDepartment.LateJoin).ToList();
-
-		return spawnPoints.Count == 0 ? null : spawnPoints.PickRandom().transform;
-	}
-	private static Transform GetSpawnForJob(JobType jobType)
-	{
-		if (jobType == JobType.NULL)
-		{
-			return null;
-		}
-
-		List<SpawnPoint> arrivals = CustomNetworkManager.startPositions.Select(
-			x => x.GetComponent<SpawnPoint>()).Where(
-			x => x.Department == JobDepartment.LateJoin).ToList();
-
-		List<SpawnPoint> spawnPoints = CustomNetworkManager.startPositions.Select(
-			x => x.GetComponent<SpawnPoint>()).Where(
-			x => x.JobRestrictions.Contains(jobType)).ToList();
-
-		//Deafault to arrivals if there is no mapped spawn point for this job!
-		// will still return null if there is no arrivals spawn points set (and people will just not spawn!).
-		return spawnPoints.Count == 0
-			? arrivals.Count != 0 ? arrivals.PickRandom().transform : null
-			: spawnPoints.PickRandom().transform;
-	}
-
 	private static StepType GetStepType(PlayerScript player)
 	{
-		if (player.Equipment.GetClothingItem(NamedSlot.outerwear)?.gameObject.GetComponent<StepChanger>() != null)
-		{
-			return StepType.Suit;
-		}
-		else if (player.Equipment.GetClothingItem(NamedSlot.feet) != null)
-		{
-			return StepType.Shoes;
-		}
+		// if (player == null || player.Equipment == null)
+		// {
+		// 	return StepType.Barefoot;
+		// }
+		//
+		// if (player.Equipment.GetClothingItem(NamedSlot.outerwear)?.gameObject.GetComponent<StepChanger>() != null)
+		// {
+		// 	return StepType.Suit;
+		// }
+		// else if (player.Equipment.GetClothingItem(NamedSlot.feet) != null)
+		// {
+		// 	return StepType.Shoes;
+		// }
 
 		return StepType.Barefoot;
 	}

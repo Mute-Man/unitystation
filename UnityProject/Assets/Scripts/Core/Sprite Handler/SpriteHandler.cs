@@ -22,6 +22,9 @@ public class SpriteHandler : MonoBehaviour
 	[SerializeField] private SpriteDataSO PresentSpriteSet;
 	private SpriteDataSO.Frame PresentFrame = null;
 
+	[Tooltip("If checked, a random sprite SO will be selected during initialization from the catalogue of sprite SOs.")]
+	[SerializeField] private bool randomInitialSprite = false;
+
 	private SpriteRenderer spriteRenderer;
 	private Image image;
 
@@ -45,7 +48,14 @@ public class SpriteHandler : MonoBehaviour
 
 	private Color? setColour = null;
 
+	[Tooltip("The palette that is applied to the Sprite Renderer, if the Present Sprite Set is paletted.")]
 	[SerializeField] private List<Color> palette = new List<Color>();
+	public List<Color> Palette => palette;
+
+	/// <summary>
+	/// false if the palette has not been configured for the current spriteSO. true otherwise
+	/// </summary>
+	private bool isPaletteSet = false;
 
 	private bool Initialised;
 
@@ -66,6 +76,17 @@ public class SpriteHandler : MonoBehaviour
 	/// Null if sprite became hidden
 	/// </summary>
 	public event System.Action<Sprite> OnSpriteChanged;
+
+	/// <summary>
+	/// Invokes when sprite data scriptable object is changed
+	/// Null if sprite became hidden
+	/// </summary>
+	public event System.Action<SpriteDataSO> OnSpriteDataSOChanged;
+
+	/// <summary>
+	/// Invoke when sprite handler has changed color of sprite
+	/// </summary>
+	public event System.Action<Color> OnColorChanged;
 
 	/// <summary>
 	/// The amount of SubCatalogues defined for this SpriteHandler.
@@ -121,7 +142,7 @@ public class SpriteHandler : MonoBehaviour
 	{
 		get
 		{
-			return CurrentSprite == null || !gameObject.activeInHierarchy;
+			return CurrentSprite == null || gameObject.activeInHierarchy == false;
 		}
 	}
 
@@ -132,7 +153,7 @@ public class SpriteHandler : MonoBehaviour
 
 	public void ChangeSprite(int SubCataloguePage, bool Network = true)
 	{
-		if (SubCataloguePage == cataloguePage) return;
+		if (cataloguePage > -1 && SubCataloguePage == cataloguePage) return;
 
 		if (SubCataloguePage >= SubCatalogue.Count)
 		{
@@ -143,7 +164,7 @@ public class SpriteHandler : MonoBehaviour
 		cataloguePage = SubCataloguePage;
 		if (isSubCatalogueChanged)
 		{
-			SetSpriteSO(SubCatalogue[SubCataloguePage], Network: true);
+			SetSpriteSO(SubCatalogue[SubCataloguePage]);
 		}
 		else
 		{
@@ -161,12 +182,17 @@ public class SpriteHandler : MonoBehaviour
 	{
 		if (NewspriteDataSO != PresentSpriteSet)
 		{
+			isPaletteSet = false;
 			PresentSpriteSet = NewspriteDataSO;
+			// TODO: Network, change to network catalogue message
+			// See https://github.com/unitystation/unitystation/pull/5675#pullrequestreview-540239428
+			cataloguePage = SubCatalogue.FindIndex(SO => SO == NewspriteDataSO);
 			PushTexture(Network);
 			if (Network)
 			{
 				NetUpdate(NewspriteDataSO);
 			}
+			OnSpriteDataSOChanged?.Invoke(NewspriteDataSO);
 		}
 
 		if (color != null)
@@ -222,12 +248,22 @@ public class SpriteHandler : MonoBehaviour
 		}
 	}
 
+	public Color GetColor()
+	{
+		if (setColour == null)
+		{
+			UpdateImageColor();
+		}
+
+		return setColour.Value;
+	}
+
 	public void SetColor(Color value, bool NetWork = true)
 	{
 		if (setColour == value) return;
 
 		setColour = value;
-		if (!HasImageComponent())
+		if (HasImageComponent() == false)
 		{
 			GetImageComponent();
 		}
@@ -243,6 +279,7 @@ public class SpriteHandler : MonoBehaviour
 	{
 		if (palette == null) return;
 		palette = null;
+		isPaletteSet = false;
 
 		if (Network)
 		{
@@ -261,6 +298,8 @@ public class SpriteHandler : MonoBehaviour
 		cataloguePage = -1;
 		PushClear(false);
 		PresentSpriteSet = null;
+		OnSpriteDataSOChanged?.Invoke(null);
+		
 
 		if (Network)
 		{
@@ -300,6 +339,16 @@ public class SpriteHandler : MonoBehaviour
 
 	public void SetPaletteOfCurrentSprite(List<Color> newPalette, bool Network = true)
 	{
+		bool paletted = isPaletted();
+
+		Debug.Assert((paletted && newPalette == null) == false, "Paletted sprites should never have palette set to null");
+
+		if (paletted == false)
+		{
+			newPalette = null;
+		}
+
+		isPaletteSet = false;
 		palette = newPalette;
 		PushTexture(false);
 		if (Network)
@@ -384,7 +433,7 @@ public class SpriteHandler : MonoBehaviour
 				Logger.LogError("Was unable to find A NetworkBehaviour for ",
 					Category.SpriteHandler);
 				return;
-			};
+			}
 
 			NetworkIdentity = NetID.netIdentity;
 			if (NetworkIdentity == null)
@@ -518,6 +567,60 @@ public class SpriteHandler : MonoBehaviour
 		{
 			image.color = value;
 		}
+
+		OnColorChanged?.Invoke(value);
+	}
+
+	private void UpdateImageColor()
+	{
+		if (spriteRenderer != null)
+		{
+			setColour = spriteRenderer.color;
+		}
+		else if (image != null)
+		{
+			setColour = image.color;
+		}
+	}
+
+	private void SetPaletteOnSpriteRenderer()
+	{
+		isPaletteSet = true;
+		var palette = getPaletteOrNull();
+		if (palette != null && palette.Count > 0 && palette.Count <= 256)
+		{
+			MaterialPropertyBlock block = new MaterialPropertyBlock();
+			spriteRenderer.GetPropertyBlock(block);
+			List<Vector4> pal = palette.ConvertAll<Vector4>((Color c) => new Vector4(c.r, c.g, c.b, c.a));
+			block.SetVectorArray("_ColorPalette", pal);
+			block.SetInt("_IsPaletted", 1);
+			block.SetInt("_PaletteSize", pal.Count);
+			spriteRenderer.SetPropertyBlock(block);
+		}
+		else
+		{
+			MaterialPropertyBlock block = new MaterialPropertyBlock();
+			spriteRenderer.GetPropertyBlock(block);
+			block.SetInt("_IsPaletted", 0);
+			spriteRenderer.SetPropertyBlock(block);
+		}
+	}
+
+	private void SetPaletteOnImage()
+	{
+		List<Color> paletteOrNull = getPaletteOrNull();
+
+		if (paletteOrNull != null && palette.Count > 0 && palette.Count <= 256)
+		{
+			List<Vector4> pal = paletteOrNull.ConvertAll((c) => new Vector4(c.r, c.g, c.b, c.a));
+			image.material.SetVectorArray("_ColorPalette", pal);
+			image.material.SetInt("_IsPaletted", 1);
+			image.material.SetInt("_PaletteSize", pal.Count);
+		}
+		else
+		{
+			image.material.SetInt("_IsPaletted", 0);
+		}
 	}
 
 	private void SetImageSprite(Sprite value)
@@ -526,25 +629,21 @@ public class SpriteHandler : MonoBehaviour
 		{
 			spriteRenderer.enabled = true;
 			spriteRenderer.sprite = value;
-			MaterialPropertyBlock block = new MaterialPropertyBlock();
-			spriteRenderer.GetPropertyBlock(block);
-			var palette = getPaletteOrNull();
-			if (palette != null && palette.Count == 8)
-			{
-				List<Vector4> pal = palette.ConvertAll<Vector4>((Color c) => new Vector4(c.r, c.g, c.b, c.a));
-				block.SetVectorArray("_ColorPalette", pal);
-				block.SetInt("_IsPaletted", 1);
-			}
-			else
-			{
-				block.SetInt("_IsPaletted", 0);
-			}
 
-			spriteRenderer.SetPropertyBlock(block);
+			if (isPaletteSet == false)
+			{
+				SetPaletteOnSpriteRenderer();
+			}
 		}
 		else if (image != null)
 		{
 			image.sprite = value;
+
+			if (isPaletteSet == false)
+			{
+				SetPaletteOnImage();
+			}
+
 			if (value == null)
 			{
 				image.enabled = false;
@@ -591,6 +690,11 @@ public class SpriteHandler : MonoBehaviour
 	{
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		image = GetComponent<Image>();
+		if (image != null)
+		{
+			// unity doesn't support property blocks on ui renderers, so this is a workaround
+			image.material = Instantiate(image.material);
+		}
 	}
 
 	private void TryInit()
@@ -599,7 +703,11 @@ public class SpriteHandler : MonoBehaviour
 		ImageComponentStatus(false);
 		Initialised = true;
 
-		if (PresentSpriteSet != null)
+		if (randomInitialSprite && CatalogueCount > 0)
+		{
+			ChangeSprite(Random.Range(0, CatalogueCount), NetworkThis);
+		}
+		else if (PresentSpriteSet != null)
 		{
 			if (HasImageComponent() && pushTextureOnStartUp)
 			{
@@ -632,6 +740,8 @@ public class SpriteHandler : MonoBehaviour
 
 		GetImageComponent();
 		OnSpriteChanged?.Invoke(CurrentSprite);
+
+		PushTexture(false); // TODO: animations don't resume when sprite object is disabled and re-enabled, this is a workaround
 	}
 
 	private void OnDisable()
@@ -642,14 +752,17 @@ public class SpriteHandler : MonoBehaviour
 
 	private bool isPaletted()
 	{
-		if (PresentSpriteSet == null) return false;
+		if (PresentSpriteSet == null)
+		{
+			return false;
+		}
 
 		return PresentSpriteSet.IsPalette;
 	}
 
 	private List<Color> getPaletteOrNull()
 	{
-		if (!isPaletted())
+		if (isPaletted() == false)
 			return null;
 
 		return palette;
@@ -657,21 +770,23 @@ public class SpriteHandler : MonoBehaviour
 
 	public void UpdateMe()
 	{
-		timeElapsed += Time.deltaTime;
-		if (PresentSpriteSet.Variance.Count > variantIndex &&
-		    timeElapsed >= PresentFrame.secondDelay)
+		timeElapsed += UpdateManager.CashedDeltaTime;
+		if (timeElapsed >= PresentFrame.secondDelay)
 		{
-			animationIndex++;
-			if (animationIndex >= PresentSpriteSet.Variance[variantIndex].Frames.Count)
+			if (PresentSpriteSet.Variance.Count > variantIndex)
 			{
-				animationIndex = 0;
+				animationIndex++;
+				if (animationIndex >= PresentSpriteSet.Variance[variantIndex].Frames.Count)
+				{
+					animationIndex = 0;
+				}
+				var frame = PresentSpriteSet.Variance[variantIndex].Frames[animationIndex];
+				SetSprite(frame);
 			}
 
-			var frame = PresentSpriteSet.Variance[variantIndex].Frames[animationIndex];
-			SetSprite(frame);
 		}
 
-		if (!isAnimation)
+		if (isAnimation == false)
 		{
 			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 		}
@@ -729,12 +844,12 @@ public class SpriteHandler : MonoBehaviour
 		}
 #endif
 
-		if (turnOn && !isAnimation)
+		if (turnOn && isAnimation == false)
 		{
 			UpdateManager.Add(CallbackType.UPDATE, UpdateMe);
 			isAnimation = true;
 		}
-		else if (!turnOn && isAnimation)
+		else if (turnOn == false && isAnimation)
 		{
 			UpdateManager.Remove(CallbackType.UPDATE, UpdateMe);
 			animationIndex = 0;
@@ -766,9 +881,9 @@ public class SpriteHandler : MonoBehaviour
 
 	private bool EditorTryToggleAnimationState(bool turnOn)
 	{
-		if (Application.isEditor && !Application.isPlaying)
+		if (Application.isEditor && Application.isPlaying == false)
 		{
-			if (turnOn && !isAnimation)
+			if (turnOn && isAnimation == false)
 			{
 				if (this.gameObject.scene.path != null && this.gameObject.scene.path.Contains("Scenes") == false &&
 				    EditorAnimating == null)
@@ -781,7 +896,7 @@ public class SpriteHandler : MonoBehaviour
 					return true;
 				}
 			}
-			else if (!turnOn && isAnimation)
+			else if (turnOn == false && isAnimation)
 			{
 				isAnimation = false;
 			}

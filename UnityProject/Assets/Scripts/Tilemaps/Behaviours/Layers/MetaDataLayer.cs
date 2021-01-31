@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Atmospherics;
+using Systems.Atmospherics;
 using Chemistry;
 using UnityEngine;
+using Objects.Construction;
 
 /// <summary>
 /// Holds and provides functionality for all the MetaDataTiles for a given matrix.
@@ -30,7 +31,7 @@ public class MetaDataLayer : MonoBehaviour
 		{
 			if (createIfNotExists)
 			{
-				nodes[localPosition] = new MetaDataNode(localPosition, reactionManager);
+				nodes[localPosition] = new MetaDataNode(localPosition, reactionManager, matrix);
 			}
 			else
 			{
@@ -125,10 +126,6 @@ public class MetaDataLayer : MonoBehaviour
 				}
 				case "SpaceCleaner":
 					Clean(worldPosInt, localPosInt, false);
-					break;
-				case "WeldingFuel":
-					//temporary: converting spilled fuel to plasma
-					Get(localPosInt).GasMix.AddGas(Gas.Plasma, reagent.Value);
 					break;
 				case "SpaceLube":
 				{

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Disposals
+namespace Objects.Disposals
 {
 	[CreateAssetMenu(fileName = "DisposalPipe", menuName = "Tiles/Disposal Pipe", order = 1)]
 	public class DisposalPipe : BasicTile, IExaminable
@@ -19,7 +19,7 @@ namespace Disposals
 
 		[SerializeField]
 		[Tooltip("Set the sides available for connecting to other disposal pipes.")]
-		List<ConnectablePoint> _ConnectablePoints = new List<ConnectablePoint>();
+		private List<ConnectablePoint> _ConnectablePoints = new List<ConnectablePoint>();
 
 		Dictionary<OrientationEnum, DisposalPipeConnType> connectablePoints;
 		public Dictionary<OrientationEnum, DisposalPipeConnType> ConnectablePoints {

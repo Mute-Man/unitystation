@@ -47,7 +47,7 @@ public class TableInteractionClimb : TileInteraction
 
 	public override void ServerPerformInteraction(TileApply interaction)
 	{
-		if (!interaction.UsedObject.RegisterTile().Matrix.IsPassableAt(interaction.TargetCellPos, true, true, null, excludeTiles))
+		if (!interaction.UsedObject.RegisterTile().Matrix.IsPassableAtOneMatrixOneTile(interaction.TargetCellPos, true, true, null, excludeTiles))
 		{
 			return;
 		}
@@ -60,7 +60,7 @@ public class TableInteractionClimb : TileInteraction
 			{
 				List<TileType> excludeTiles = new List<TileType>() { TileType.Table };
 
-				if (playerScript.registerTile.Matrix.IsPassableAt(interaction.TargetCellPos, true, true, null, excludeTiles))
+				if (playerScript.registerTile.Matrix.IsPassableAtOneMatrixOneTile(interaction.TargetCellPos, true, true, null, excludeTiles))
 				{
 					playerScript.PlayerSync.SetPosition(interaction.WorldPositionTarget);
 				}
@@ -76,7 +76,7 @@ public class TableInteractionClimb : TileInteraction
 		}).ServerStartProgress(interaction.UsedObject.RegisterTile(), 3.0f, interaction.Performer);
 		
 		Chat.AddActionMsgToChat(interaction.Performer,
-			"You begin cimbing onto the table...",
+			"You begin climbing onto the table...",
 			$"{interaction.Performer.ExpensiveName()} begins climbing onto the table...");
 	}
 }

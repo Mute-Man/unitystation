@@ -1,7 +1,8 @@
-
 using System;
 using UnityEngine;
+using Items;
 using Random = UnityEngine.Random;
+using AddressableReferences;
 
 /// <summary>
 /// Utilities for working with tools / materials. Respects the Tool component settings when performing actions.
@@ -161,33 +162,38 @@ public static class ToolUtils
 	public static void ServerPlayToolSound(GameObject tool, Vector2 worldTilePos, GameObject owner = null)
 	{
 		if (tool == null) return;
-		string soundName = null;
-		var itemAttrs = tool.GetComponent<ItemAttributesV2>();
-		if (itemAttrs != null)
+
+		AddressableAudioSource soundName = null;
+
+		if (tool.TryGetComponent(out ToolSwapComponent toolSwap))
+		{
+			soundName = toolSwap.CurrentState.usingSound;
+		}
+		else if (tool.TryGetComponent(out ItemAttributesV2 itemAttrs))
 		{
 			if (itemAttrs.HasTrait(CommonTraits.Instance.Crowbar))
 			{
-				soundName = "Crowbar";
+				soundName = SingletonSOSounds.Instance.Crowbar;
 			}
 			else if (itemAttrs.HasTrait(CommonTraits.Instance.Screwdriver))
 			{
-				soundName = "screwdriver#";
+				soundName = SingletonSOSounds.Instance.screwdriver;
 			}
 			else if (itemAttrs.HasTrait(CommonTraits.Instance.Wirecutter))
 			{
-				soundName = "WireCutter";
+				soundName = SingletonSOSounds.Instance.WireCutter;
 			}
 			else if (itemAttrs.HasTrait(CommonTraits.Instance.Wrench))
 			{
-				soundName = "Wrench";
+				soundName = SingletonSOSounds.Instance.Wrench;
 			}
 			else if (itemAttrs.HasTrait(CommonTraits.Instance.Welder))
 			{
-				soundName = "Weld";
+				soundName = SingletonSOSounds.Instance.Weld;
 			}
 			else if (itemAttrs.HasTrait(CommonTraits.Instance.Shovel))
 			{
-				soundName = "Shovel";
+				soundName = SingletonSOSounds.Instance.Shovel;
 			}
 		}
 

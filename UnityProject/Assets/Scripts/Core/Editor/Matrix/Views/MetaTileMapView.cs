@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TileManagement;
 using UnityEditor;
 using UnityEngine;
 
@@ -67,7 +68,7 @@ public class MetaTileMapView : BasicView
 
 		public override void DrawGizmo(MetaTileMap source, Vector3Int position)
 		{
-			if (source.HasTile(position, LayerType.Objects, false))
+			if (source.HasObject(position, CustomNetworkManager.Instance._isServer))
 			{
 				GizmoUtils.DrawCube(position, Color.magenta);
 			}
@@ -93,7 +94,7 @@ public class MetaTileMapView : BasicView
 
 		public override void DrawGizmo(MetaTileMap source, Vector3Int position)
 		{
-			if (!source.IsPassableAt(position, false))
+			if (source.IsPassableAtOneTileMap(position, position, false) == false)
 			{
 				GizmoUtils.DrawCube(position, Color.blue);
 			}

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using DatabaseAPI;
 using Mirror;
 using UnityEngine;
-using UnityEngine.Diagnostics;
 using DiscordWebhook;
 using Messages.Client;
 using Newtonsoft.Json;
@@ -19,10 +18,14 @@ using Newtonsoft.Json;
 public partial class PlayerList
 {
 	private FileSystemWatcher adminListWatcher;
+	private FileSystemWatcher mentorListWatcher;
 	private FileSystemWatcher WhiteListWatcher;
 	private List<string> adminUsers = new List<string>();
+	private List<string> mentorUsers = new List<string>();
 	private Dictionary<string, string> loggedInAdmins = new Dictionary<string, string>();
+	private Dictionary<string, string> loggedInMentors = new Dictionary<string, string>();
 	private BanList banList;
+	private string mentorsPath;
 	private string adminsPath;
 	private string banPath;
 	private List<string> whiteListUsers = new List<string>();
@@ -35,10 +38,15 @@ public partial class PlayerList
 
 	public string AdminToken { get; private set; }
 
+	//does the client think he's an admin
+	public bool IsClientAdmin;
+	public string MentorToken { get; private set; }
+
 	[Server]
 	void InitAdminController()
 	{
 		adminsPath = Path.Combine(Application.streamingAssetsPath, "admin", "admins.txt");
+		mentorsPath = Path.Combine(Application.streamingAssetsPath, "admin", "mentors.txt");
 		banPath = Path.Combine(Application.streamingAssetsPath, "admin", "banlist.json");
 		whiteListPath = Path.Combine(Application.streamingAssetsPath, "admin", "whitelist.txt");
 		jobBanPath = Path.Combine(Application.streamingAssetsPath, "admin", "jobBanlist.json");
@@ -46,6 +54,11 @@ public partial class PlayerList
 		if (!File.Exists(adminsPath))
 		{
 			File.CreateText(adminsPath).Close();
+		}
+
+		if (!File.Exists(mentorsPath))
+		{
+			File.CreateText(mentorsPath).Close();
 		}
 
 		if (!File.Exists(banPath))
@@ -70,6 +83,13 @@ public partial class PlayerList
 		adminListWatcher.Changed += LoadCurrentAdmins;
 		adminListWatcher.EnableRaisingEvents = true;
 
+		mentorListWatcher = new FileSystemWatcher();
+		mentorListWatcher.Path = Path.GetDirectoryName(mentorsPath);
+		mentorListWatcher.Filter = Path.GetFileName(mentorsPath);
+		mentorListWatcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite;
+		mentorListWatcher.Changed += LoadCurrentMentors;
+		mentorListWatcher.EnableRaisingEvents = true;
+
 		WhiteListWatcher = new FileSystemWatcher();
 		WhiteListWatcher.Path = Path.GetDirectoryName(whiteListPath);
 		WhiteListWatcher.Filter = Path.GetFileName(whiteListPath);
@@ -79,6 +99,7 @@ public partial class PlayerList
 
 		LoadBanList();
 		LoadCurrentAdmins();
+		LoadCurrentMentors();
 		LoadWhiteList();
 		LoadJobBanList();
 	}
@@ -105,6 +126,16 @@ public partial class PlayerList
 	void LoadCurrentAdmins()
 	{
 		StartCoroutine(LoadAdmins());
+	}
+
+	void LoadCurrentMentors(object source, FileSystemEventArgs e)
+	{
+		LoadCurrentMentors();
+	}
+
+	void LoadCurrentMentors()
+	{
+		StartCoroutine(LoadMentors());
 	}
 
 	void LoadJobBanList()
@@ -140,6 +171,14 @@ public partial class PlayerList
 		yield return WaitFor.EndOfFrame;
 		adminUsers.Clear();
 		adminUsers = new List<string>(File.ReadAllLines(adminsPath));
+	}
+
+	IEnumerator LoadMentors()
+	{
+		//ensure any writing has finished
+		yield return WaitFor.EndOfFrame;
+		mentorUsers.Clear();
+		mentorUsers = new List<string>(File.ReadAllLines(mentorsPath));
 	}
 
 	[Server]
@@ -186,9 +225,64 @@ public partial class PlayerList
 	}
 
 	[Server]
+	public bool IsAdmin(ConnectedPlayer player)
+	{
+		return IsAdmin(player.ClientId);
+	}
+
+	[Server]
 	public bool IsAdmin(string userID)
 	{
 		return adminUsers.Contains(userID);
+	}
+
+	[Server]
+	public GameObject GetMentor(string userID, string token)
+	{
+
+		if (string.IsNullOrEmpty(userID))
+		{
+			//allow null mentor when doing offline testing
+			if (GameData.Instance.OfflineMode)
+			{
+				return PlayerManager.LocalPlayer;
+			}
+			Logger.LogError("The User ID for Mentor is null!", Category.Mentor);
+			if (string.IsNullOrEmpty(token))
+			{
+				Logger.LogError("The AdminToken value is null!", Category.Mentor);
+			}
+
+			return null;
+		}
+
+		if (!loggedInMentors.ContainsKey(userID)) return null;
+
+		if (loggedInMentors[userID] != token) return null;
+
+		return GetByUserID(userID).GameObject;
+	}
+
+	[Server]
+	public List<ConnectedPlayer> GetAllMentors()
+	{
+		List<ConnectedPlayer> mentors = new List<ConnectedPlayer>();
+		foreach (var a in loggedInMentors)
+		{
+			var getConn = GetByUserID(a.Key);
+			if (getConn != null)
+			{
+				mentors.Add(getConn);
+			}
+		}
+
+		return mentors;
+	}
+
+	[Server]
+	public bool IsMentor(string userID)
+	{
+		return mentorUsers.Contains(userID);
 	}
 
 	public async Task<bool> ValidatePlayer(string unverifiedClientId, string unverifiedUsername,
@@ -317,7 +411,7 @@ public partial class PlayerList
 			if (!loggedInAdmins.ContainsKey(Userid))
 			{
 				loggedInAdmins.Add(Userid, newToken);
-				AdminEnableMessage.Send(user.Connection, newToken);
+				AdminEnableMessage.Send(user, newToken);
 			}
 		}
 
@@ -462,8 +556,18 @@ public partial class PlayerList
 	/// <returns></returns>
 	private List<JobBanEntry> ClientAskingAboutJobBans(ConnectedPlayer connPlayer)
 	{
+		if (connPlayer.Equals(ConnectedPlayer.Invalid))
+		{
+			Logger.LogError($"Attempted to check job-ban for invalid player.");
+			return default;
+		}
+
+		string playerUserID = connPlayer.UserId;
+		string playerAddress = connPlayer.Connection.address;
+		string playerClientID = connPlayer.ClientId;
+
 		//jobbanlist checking:
-		var jobBanPlayerEntry = jobBanList?.CheckForEntry(connPlayer.UserId, connPlayer.Connection.address, connPlayer.ClientId);
+		var jobBanPlayerEntry = jobBanList?.CheckForEntry(playerUserID, playerAddress, playerClientID);
 
 		if (jobBanPlayerEntry == null)
 		{
@@ -551,7 +655,7 @@ public partial class PlayerList
 	/// </summary>
 	/// <param name="job"></param>
 	/// <returns></returns>
-	public bool ClientCheck(JobType job)
+	public bool ClientJobBanCheck(JobType job)
 	{
 		if (Instance.clientSideBanEntries == null || Instance.clientSideBanEntries.Count == 0)
 		{
@@ -737,7 +841,22 @@ public partial class PlayerList
 			if (!loggedInAdmins.ContainsKey(userid))
 			{
 				loggedInAdmins.Add(userid, newToken);
-				AdminEnableMessage.Send(playerConn.Connection, newToken);
+				AdminEnableMessage.Send(playerConn, newToken);
+			}
+		}
+	}
+
+	public void CheckMentorState(ConnectedPlayer playerConn, string userid)
+	{
+		if (mentorUsers.Contains(userid) && !adminUsers.Contains(userid))
+		{
+			Logger.Log($"{playerConn.Username} logged in as Mentor. " +
+					   $"IP: {playerConn.Connection.address}");
+			var newToken = System.Guid.NewGuid().ToString();
+			if (!loggedInMentors.ContainsKey(userid))
+			{
+				loggedInMentors.Add(userid, newToken);
+				MentorEnableMessage.Send(playerConn.Connection, newToken);
 			}
 		}
 	}
@@ -754,8 +873,15 @@ public partial class PlayerList
 	public void SetClientAsAdmin(string _adminToken)
 	{
 		AdminToken = _adminToken;
+		IsClientAdmin = true;
 		ControlTabs.Instance.ToggleOnAdminTab();
 		Logger.Log("You have logged in as an admin. Admin tools are now available.");
+	}
+
+	public void SetClientAsMentor(string _mentorToken)
+	{
+		MentorToken = _mentorToken;
+		Logger.Log("You have logged in as a mentor. Mentor tools are now available.");
 	}
 
 	public void ProcessAdminEnableRequest(string admin, string userToPromote)
@@ -780,27 +906,28 @@ public partial class PlayerList
 		if (!loggedInAdmins.ContainsKey(userToPromote))
 		{
 			loggedInAdmins.Add(userToPromote, newToken);
-			AdminEnableMessage.Send(user.Connection, newToken);
+			AdminEnableMessage.Send(user, newToken);
 		}
 	}
 	#endregion
 
 	#region Kick/Ban
 
-	public void ProcessKickRequest(string admin, string userToKick, string reason, bool isBan, int banMinutes, bool announceBan)
+	public void ProcessKickRequest(string adminId, string userToKick, string reason, bool isBan, int banMinutes, bool announceBan)
 	{
-		if (!adminUsers.Contains(admin)) return;
+		if (!adminUsers.Contains(adminId)) return;
 
-		var players = GetAllByUserID(userToKick);
+		ConnectedPlayer adminPlayer = PlayerList.Instance.GetByUserID(adminId);
+		List<ConnectedPlayer> players = GetAllByUserID(userToKick, true);
 		if (players.Count != 0)
 		{
 			foreach (var p in players)
 			{
-				var message = $"A kick/ban has been processed by {PlayerList.Instance.GetByUserID(admin).Username}: Username: {p.Username} Player: {p.Name} IsBan: {isBan} BanMinutes: {banMinutes} Time: {DateTime.Now}";
+				string message = $"A kick/ban has been processed by {adminPlayer.Username}: Username: {p.Username} Player: {p.Name} IsBan: {isBan} BanMinutes: {banMinutes} Time: {DateTime.Now}";
 
 				Logger.Log(message);
 
-				StartCoroutine(KickPlayer(p, reason, isBan, banMinutes));
+				StartCoroutine(KickPlayer(p, reason, isBan, banMinutes,adminPlayer));
 
 				DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, message + $"\nReason: {reason}", "");
 
@@ -822,12 +949,12 @@ public partial class PlayerList
 		}
 		else
 		{
-			Logger.Log($"Kick ban failed, can't find player: {userToKick}. Requested by {admin}");
+			Logger.Log($"Kick ban failed, can't find player: {userToKick}. Requested by {adminPlayer.Username}");
 		}
 	}
 
 	IEnumerator KickPlayer(ConnectedPlayer connPlayer, string reason,
-		bool ban = false, int banLengthInMinutes = 0)
+		bool ban = false, int banLengthInMinutes = 0, ConnectedPlayer adminPlayer = null)
 	{
 		Logger.Log("Processing KickPlayer/ban for " + "\n"
 				   + "UserId " + connPlayer?.UserId + "\n"
@@ -842,7 +969,7 @@ public partial class PlayerList
 			message = $"You have been banned for {banLengthInMinutes}" +
 					  $" minutes. Reason: {reason}";
 
-			var index = banList.banEntries.FindIndex(x => x.userId == connPlayer.UserId);
+			int index = banList.banEntries.FindIndex(x => x.userId == connPlayer.UserId);
 			if (index != -1)
 			{
 				Logger.Log("removing pre-existing ban entry for userId of" + connPlayer.UserId);
@@ -857,7 +984,9 @@ public partial class PlayerList
 				reason = reason,
 				dateTimeOfBan = DateTime.Now.ToString("O"),
 				ipAddress = connPlayer?.Connection?.address,
-				clientId = connPlayer?.ClientId
+				clientId = connPlayer?.ClientId,
+				adminId = adminPlayer?.UserId,
+				adminName = adminPlayer?.Username
 			});
 
 			SaveBanList();
@@ -896,31 +1025,32 @@ public partial class PlayerList
 		loggedOff.Remove(connPlayer);
 	}
 
-	public void ProcessJobBanRequest(string admin, string userToJobBan, string reason, bool isPerma, int banMinutes, JobType jobType, bool kickAfter = false, bool ghostAfter = false)
+	public void ProcessJobBanRequest(string adminId, string userToJobBan, string reason, bool isPerma, int banMinutes, JobType jobType, bool kickAfter = false, bool ghostAfter = false)
 	{
-		if (!adminUsers.Contains(admin)) return;
+		if (!adminUsers.Contains(adminId)) return;
 
-		var players = GetAllByUserID(userToJobBan);
+		ConnectedPlayer adminPlayer = PlayerList.Instance.GetByUserID(adminId);
+		List<ConnectedPlayer> players = GetAllByUserID(userToJobBan);
 		if (players.Count != 0)
 		{
 			foreach (var p in players)
 			{
-				var message = "";
+				string message = "";
 
 				if (isPerma)
 				{
-					message = $"A job ban has been processed by {PlayerList.Instance.GetByUserID(admin).Username}: Username: {p.Username} Player: {p.Name} Job: {jobType} IsPerma: {isPerma} Time: {DateTime.Now}";
+					message = $"A job ban has been processed by {adminPlayer.Username}: Username: {p.Username} Player: {p.Name} Job: {jobType} IsPerma: {isPerma} Time: {DateTime.Now}";
 				}
 				else
 				{
-					message = $"A job ban has been processed by {PlayerList.Instance.GetByUserID(admin).Username}: Username: {p.Username} Player: {p.Name} Job: {jobType} BanMinutes: {banMinutes} Time: {DateTime.Now}";
+					message = $"A job ban has been processed by {adminPlayer.Username}: Username: {p.Username} Player: {p.Name} Job: {jobType} BanMinutes: {banMinutes} Time: {DateTime.Now}";
 				}
 
 				Logger.Log(message);
 
-				StartCoroutine(JobBanPlayer(p, reason, isPerma, banMinutes, jobType));
+				StartCoroutine(JobBanPlayer(p, reason, isPerma, banMinutes, jobType, adminPlayer));
 
-				UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord($"{PlayerList.Instance.GetByUserID(admin).Username}: job banned {p.Username} from {jobType}, IsPerma: {isPerma}, BanMinutes: {banMinutes}", null);
+				UIManager.Instance.adminChatWindows.adminToAdminChat.ServerAddChatRecord($"{adminPlayer.Username}: job banned {p.Username} from {jobType}, IsPerma: {isPerma}, BanMinutes: {banMinutes}", null);
 
 				DiscordWebhookMessage.Instance.AddWebHookMessageToQueue(DiscordWebhookURLs.DiscordWebhookAdminLogURL, message + $"\nReason: {reason}", "");
 
@@ -942,11 +1072,11 @@ public partial class PlayerList
 		}
 		else
 		{
-			Logger.Log($"job ban failed, can't find player: {userToJobBan}. Requested by {admin}");
+			Logger.Log($"job ban failed, can't find player: {userToJobBan}. Requested by {adminPlayer.Username}");
 		}
 	}
 
-	IEnumerator JobBanPlayer(ConnectedPlayer connPlayer, string reason, bool isPermaBool, int banLengthInMinutes, JobType jobType)
+	IEnumerator JobBanPlayer(ConnectedPlayer connPlayer, string reason, bool isPermaBool, int banLengthInMinutes, JobType jobType, ConnectedPlayer admin)
 	{
 		if (jobBanList == null)
 		{
@@ -975,7 +1105,9 @@ public partial class PlayerList
 				userName = connPlayer?.Username,
 				ipAddress = connPlayer?.Connection?.address,
 				clientId = connPlayer?.ClientId,
-				jobBanEntry = new List<JobBanEntry>()
+				jobBanEntry = new List<JobBanEntry>(),
+				adminId = admin?.UserId,
+				adminName = admin?.Username
 			});
 
 			jobBanPlayerEntry = jobBanList?.CheckForEntry(connPlayer.UserId, connPlayer.Connection.address, connPlayer.ClientId);
@@ -1050,12 +1182,17 @@ public class BanEntry
 	public string ipAddress;
 	public string clientId;
 
+	public string adminId;
+
+	public string adminName;
+
 	public override string ToString()
 	{
 		return ("BanEntry of " + userId + " / " + userName + "\n"
 				 + "for " + minutes + " minutes, on" + dateTimeOfBan + "\n"
 				 + "on IP " + ipAddress + "\n"
 				 + "clientId " + clientId + "\n"
+				 + "by " + adminId + " / " + adminName + "\n"
 				 + "for reason" + reason);
 	}
 }
@@ -1085,6 +1222,10 @@ public class JobBanPlayerEntry
 	public string userName;
 	public string ipAddress;
 	public string clientId;
+
+	public string adminId;
+
+	public string adminName;
 
 	public List<JobBanEntry> jobBanEntry = new List<JobBanEntry>();
 

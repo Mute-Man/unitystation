@@ -6,6 +6,8 @@ using Light2D;
 using UnityEngine;
 using Mirror;
 using UnityEngine.Serialization;
+using UI.Objects.Shuttles;
+using Systems.Shuttles;
 
 /// <summary>
 /// Behavior which allows an entire matrix to move and rotate (and be synced over the network).
@@ -53,7 +55,7 @@ public class MatrixMove : ManagedNetworkBehaviour
 	/// <summary>
 	/// local pivot point, set on start and never changed afterwards
 	/// </summary>
-	public Vector3Int Pivot => pivot.RoundToInt();
+	public Vector3 Pivot => pivot.RoundToInt();
 
 	/// <summary>
 	/// All the various events that can be subscribed to on this matrix
@@ -155,7 +157,7 @@ public class MatrixMove : ManagedNetworkBehaviour
 	/// NOTE: This is not an offset from initialfacing, it's an offset from our current facing. So
 	/// if we are turning 90 degrees right, this will be Right no matter what our initial conditions were.
 	/// </summary>
-	private RotationOffset? inProgressRotation;
+	public RotationOffset? inProgressRotation;
 
 	private readonly int rotTime = 90;
 	[HideInInspector]
@@ -174,6 +176,9 @@ public class MatrixMove : ManagedNetworkBehaviour
 	/// position?
 	/// </summary>
 	public bool Initialized => clientStarted && receivedInitialState;
+
+	[FormerlySerializedAs("NoConsole"),Tooltip("Disable the ability for players to use a shuttleconsole to control this matrix")]
+	public bool IsNotPilotable = false;
 
 	public override void OnStartClient()
 	{
@@ -759,7 +764,7 @@ public class MatrixMove : ManagedNetworkBehaviour
 
 			// Exclude the moving matrix, we shouldn't be able to collide with ourselves
 			int[] excludeList = { matrixInfo.Id };
-			if (!MatrixManager.IsPassableAt(sensorPos, sensorPos + dir.RoundToInt(), isServer: true,
+			if (!MatrixManager.IsPassableAtAllMatrices(sensorPos, sensorPos + dir.RoundToInt(), isServer: true,
 											collisionType: matrixColliderType, excludeList: excludeList))
 			{
 				Logger.LogTrace(
@@ -791,7 +796,7 @@ public class MatrixMove : ManagedNetworkBehaviour
 
 			// Exclude the rotating matrix, we shouldn't be able to collide with ourselves
 			int[] excludeList = { matrixInfo.Id };
-			if (!MatrixManager.IsPassableAt(sensorPos, sensorPos, isServer: true,
+			if (!MatrixManager.IsPassableAtAllMatrices(sensorPos, sensorPos, isServer: true,
 											collisionType: matrixColliderType, includingPlayers: true, excludeList: excludeList))
 			{
 				Logger.LogTrace(

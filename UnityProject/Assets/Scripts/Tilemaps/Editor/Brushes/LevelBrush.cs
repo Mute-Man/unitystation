@@ -1,4 +1,5 @@
 ﻿using System;
+using TileManagement;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -82,7 +83,7 @@ public class LevelBrush : GridBrush
 		{
 			if (metaTileMap)
 			{
-				metaTileMap.RemoveTile(position, LayerType.None, false);
+				metaTileMap.RemoveTile(position,  false);
 			}
 			else
 			{
@@ -114,7 +115,7 @@ public class LevelBrush : GridBrush
 		foreach (LayerTile tile in metaTile.GetTiles())
 		{
 			//metaTileMap.RemoveTileWithlayer(position, tile.LayerType);
-			metaTileMap.SetTile(position, tile, cells[0].matrix);
+			metaTileMap.SetTile(position, tile, cells[0].matrix, isPlaying: false);
 		}
 	}
 
@@ -131,6 +132,6 @@ public class LevelBrush : GridBrush
 			SetTile(metaTileMap, position, requiredTile);
 		}
 
-		metaTileMap.SetTile(position, tile, cells[0].matrix, cells[0].color);
+		metaTileMap.SetTile(position, tile, cells[0].matrix, cells[0].color, isPlaying: false);
 	}
 }

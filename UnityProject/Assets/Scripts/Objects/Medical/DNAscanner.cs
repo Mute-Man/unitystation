@@ -4,170 +4,160 @@ using System.Threading;
 using System.Linq;
 using UnityEngine;
 using Mirror;
+using Systems.Electricity;
 
-public class DNAscanner : ClosetControl, ICheckedInteractable<MouseDrop>, IAPCPowered
+namespace Objects.Medical
 {
-	public LivingHealthBehaviour occupant;
-	public string statusString;
-
-	public bool Powered => powered;
-	[SyncVar(hook = nameof(SyncPowered))] private bool powered;
-	//tracks whether we've recieved our first power update from electriciy.
-	//allows us to avoid  syncing power when it is unchanged
-	private bool powerInit;
-
-	public Sprite openUnPoweredSprite;
-	public Sprite openPoweredSprite;
-	public Sprite closedUnPoweredSprite;
-	public Sprite closedPoweredSprite;
-	public Sprite[] closedPoweredWithOccupant;
-	public float animSpeed = 0.1f;
-
-	private CancellationTokenSource cancelOccupiedAnim = new CancellationTokenSource();
-
-	public override void OnStartClient()
+	public class DNAscanner : ClosetControl, ICheckedInteractable<MouseDrop>, IAPCPowered
 	{
-		base.OnStartClient();
-		SyncPowered(powered, powered);
-	}
+		public LivingHealthBehaviour occupant;
+		public string statusString;
 
-	public override void OnSpawnServer(SpawnInfo info)
-	{
-		base.OnSpawnServer(info);
-		statusString = "Ready to scan.";
-		SyncPowered(powered, powered);
-	}
+		public bool Powered => powered;
+		[SyncVar(hook = nameof(SyncPowered))] private bool powered;
+		//tracks whether we've recieved our first power update from electriciy.
+		//allows us to avoid  syncing power when it is unchanged
+		private bool powerInit;
 
-	protected override void ServerHandleContentsOnStatusChange(bool willClose)
-	{
-		base.ServerHandleContentsOnStatusChange(willClose);
-		if(ServerHeldPlayers.Any())
+		private enum ScannerState
 		{
-			var mob = ServerHeldPlayers.First();
-			occupant = mob.GetComponent<LivingHealthBehaviour>();
+			OpenUnpowered,
+			OpenPowered,
+			ClosedUnpowered,
+			ClosedPowered,
+			ClosedPoweredWithOccupant
 		}
-		else
+
+		public Objects.Engineering.APC RelatedAPC;
+
+		private CancellationTokenSource cancelOccupiedAnim = new CancellationTokenSource();
+
+		public override void OnStartClient()
 		{
-			occupant = null;
+			base.OnStartClient();
+			SyncPowered(powered, powered);
+			RelatedAPC = GetComponent<APCPoweredDevice>().RelatedAPC;
 		}
-	}
 
-	public bool WillInteract(MouseDrop interaction, NetworkSide side)
-	{
-		if (side == NetworkSide.Server && IsClosed)
-			return false;
-		if (!Validations.CanInteract(interaction.Performer, side))
-			return false;
-		if (!Validations.IsAdjacent(interaction.Performer, interaction.DroppedObject))
-			return false;
-		if (!Validations.IsAdjacent(interaction.Performer, gameObject))
-			return false;
-		if (interaction.Performer == interaction.DroppedObject)
-			return false;
-		return true;
-	}
-
-	public void ServerPerformInteraction(MouseDrop drop)
-	{
-		var objectBehaviour = drop.DroppedObject.GetComponent<ObjectBehaviour>();
-		if(objectBehaviour)
+		public override void OnSpawnServer(SpawnInfo info)
 		{
-			ServerStorePlayer(objectBehaviour);
-			ServerToggleClosed(true);
+			base.OnSpawnServer(info);
+			statusString = "Ready to scan.";
+			SyncPowered(powered, powered);
+			RelatedAPC = GetComponent<APCPoweredDevice>().RelatedAPC;
 		}
-	}
 
-	protected override void UpdateSpritesOnStatusChange()
-	{
-		//Logger.Log("TTTTTTTTTTTTT" + value.ToString());
-		if (ClosetStatus == ClosetStatus.Open)
+		protected override void ServerHandleContentsOnStatusChange(bool willClose)
 		{
-			cancelOccupiedAnim.Cancel();
-			if (!powered)
+			base.ServerHandleContentsOnStatusChange(willClose);
+			if (ServerHeldPlayers.Any())
 			{
-				spriteRenderer.sprite = openUnPoweredSprite;
+				var mob = ServerHeldPlayers.First();
+				occupant = mob.GetComponent<LivingHealthBehaviour>();
 			}
 			else
 			{
-				spriteRenderer.sprite = openPoweredSprite;
+				occupant = null;
 			}
 		}
-		else if (!powered)
+
+		public bool WillInteract(MouseDrop interaction, NetworkSide side)
 		{
-			cancelOccupiedAnim.Cancel();
-			spriteRenderer.sprite = closedUnPoweredSprite;
+			if (side == NetworkSide.Server && IsClosed)
+				return false;
+			if (!Validations.CanInteract(interaction.Performer, side))
+				return false;
+			if (!Validations.IsAdjacent(interaction.Performer, interaction.DroppedObject))
+				return false;
+			if (!Validations.IsAdjacent(interaction.Performer, gameObject))
+				return false;
+			if (interaction.Performer == interaction.DroppedObject)
+				return false;
+			return true;
 		}
-		else if (ClosetStatus == ClosetStatus.Closed)
+
+		public void ServerPerformInteraction(MouseDrop drop)
 		{
-			cancelOccupiedAnim.Cancel();
-			spriteRenderer.sprite = closedPoweredSprite;
-		}
-		else if(ClosetStatus == ClosetStatus.ClosedWithOccupant)
-		{
-			cancelOccupiedAnim = new CancellationTokenSource();
-			if (gameObject != null && gameObject.activeInHierarchy)
+			var objectBehaviour = drop.DroppedObject.GetComponent<ObjectBehaviour>();
+			if (objectBehaviour)
 			{
-				StartCoroutine(AnimateOccupied());
+				ServerStorePlayer(objectBehaviour);
+				ServerToggleClosed(true);
 			}
 		}
-	}
 
-	IEnumerator AnimateOccupied()
-	{
-		var index = 0;
-		while (true)
+		protected override void UpdateSpritesOnStatusChange()
 		{
-			if (cancelOccupiedAnim.IsCancellationRequested)
+			//Logger.Log("TTTTTTTTTTTTT" + value.ToString());
+			if (ClosetStatus == ClosetStatus.Open)
 			{
-				yield break;
+				cancelOccupiedAnim.Cancel();
+				if (!powered)
+				{
+					doorSpriteHandler.ChangeSprite((int) ScannerState.OpenUnpowered);
+				}
+				else
+				{
+					doorSpriteHandler.ChangeSprite((int) ScannerState.OpenPowered);
+				}
 			}
-
-			spriteRenderer.sprite = closedPoweredWithOccupant[index];
-			index++;
-			if (index == closedPoweredWithOccupant.Length)
+			else if (!powered)
 			{
-				index = 0;
+				cancelOccupiedAnim.Cancel();
+				doorSpriteHandler.ChangeSprite((int) ScannerState.ClosedUnpowered);
 			}
-			yield return WaitFor.Seconds(animSpeed);
-		}
-	}
-
-	private void SyncPowered(bool oldValue, bool value)
-	{
-		//does nothing if power is unchanged and
-		//we've already init'd
-		if (powered == value && powerInit) return;
-
-		powered = value;
-		if(!powered)
-		{
-			if(IsLocked)
+			else if (ClosetStatus == ClosetStatus.Closed)
 			{
-				ServerToggleLocked(false);
+				cancelOccupiedAnim.Cancel();
+				doorSpriteHandler.ChangeSprite((int) ScannerState.ClosedPowered);
+			}
+			else if (ClosetStatus == ClosetStatus.ClosedWithOccupant)
+			{
+				cancelOccupiedAnim = new CancellationTokenSource();
+				if (gameObject != null && gameObject.activeInHierarchy)
+				{
+					doorSpriteHandler.ChangeSprite((int) ScannerState.ClosedPoweredWithOccupant);
+				}
 			}
 		}
-		UpdateSpritesOnStatusChange();
-	}
 
-	public void PowerNetworkUpdate(float Voltage)
-	{
-	}
-
-	public void StateUpdate(PowerStates State)
-	{
-		if (State == PowerStates.Off || State == PowerStates.LowVoltage)
+		private void SyncPowered(bool oldValue, bool value)
 		{
-			SyncPowered(powered, false);
-		}
-		else
-		{
-			SyncPowered(powered, true);
+			//does nothing if power is unchanged and
+			//we've already init'd
+			if (powered == value && powerInit) return;
+
+			powered = value;
+			if (!powered)
+			{
+				if (IsLocked)
+				{
+					ServerToggleLocked(false);
+				}
+			}
+			UpdateSpritesOnStatusChange();
 		}
 
-		if (!powerInit)
+		public void PowerNetworkUpdate(float Voltage)
 		{
-			powerInit = true;
+		}
+
+		public void StateUpdate(PowerStates State)
+		{
+			RelatedAPC = GetComponent<APCPoweredDevice>().RelatedAPC;
+			if (State == PowerStates.Off || State == PowerStates.LowVoltage)
+			{
+				SyncPowered(powered, false);
+			}
+			else
+			{
+				SyncPowered(powered, true);
+			}
+
+			if (!powerInit)
+			{
+				powerInit = true;
+			}
 		}
 	}
-
 }

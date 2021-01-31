@@ -1,15 +1,14 @@
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
-namespace Atmospherics
+namespace Systems.Atmospherics
 {
 	public interface Reaction
 	{
 		bool Satisfies(GasMix gasMix);
 
-		float React(ref GasMix gasMix, Vector3 tilePos);
+		void React(GasMix gasMix, Vector3 tilePos, Matrix matrix);
 	}
 
 	public struct GasReactions

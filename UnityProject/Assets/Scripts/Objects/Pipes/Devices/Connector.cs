@@ -1,8 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Atmospherics;
-using Objects.GasContainer;
+using Objects.Atmospherics;
 
 namespace Pipes
 {
@@ -25,6 +24,7 @@ namespace Pipes
 			base.TickUpdate();
 			if (canister != null && canister.ValveIsOpen)
 			{
+				pipeData.mixAndVolume.GetGasMix().MergeGasMix(canister.GasContainer.GasMix);
 				canister.GasContainer.GasMix = pipeData.mixAndVolume.EqualiseWithExternal(canister.GasContainer.GasMix);
 			}
 			pipeData.mixAndVolume.EqualiseWithOutputs(pipeData.Outputs);

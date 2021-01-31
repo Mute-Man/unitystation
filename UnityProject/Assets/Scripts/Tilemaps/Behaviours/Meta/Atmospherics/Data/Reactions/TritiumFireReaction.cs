@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Radiation;
+using Systems.Radiation;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-namespace Atmospherics
+namespace Systems.Atmospherics
 {
 	public class TritiumFireReaction : Reaction
 	{
+		private static System.Random rnd = new System.Random();
 		public bool Satisfies(GasMix gasMix)
 		{
 			throw new System.NotImplementedException();
 		}
 
-		public float React(ref GasMix gasMix, Vector3 tilePos)
+		public void React(GasMix gasMix, Vector3 tilePos, Matrix matrix)
 		{
 			var energyReleased = 0f;
 			var oldHeatCap = gasMix.WholeHeatCapacity;
@@ -37,9 +37,9 @@ namespace Atmospherics
 			{
 				energyReleased += AtmosDefines.FIRE_HYDROGEN_ENERGY_RELEASED * burnedFuel;
 
-				if (Random.Range(0,10) == 0 && burnedFuel > AtmosDefines.TRITIUM_MINIMUM_RADIATION_ENERGY)
+				if (rnd.Next(0,10) == 0 && burnedFuel > AtmosDefines.TRITIUM_MINIMUM_RADIATION_ENERGY)
 				{
-					RadiationManager.Instance.RequestPulse(MatrixManager.AtPoint(tilePos.RoundToInt(), true).Matrix, tilePos.RoundToInt(), energyReleased / AtmosDefines.TRITIUM_BURN_RADIOACTIVITY_FACTOR, Random.Range(Int32.MinValue, Int32.MaxValue));
+					RadiationManager.Instance.RequestPulse(matrix, tilePos.RoundToInt(), energyReleased / AtmosDefines.TRITIUM_BURN_RADIOACTIVITY_FACTOR, rnd.Next(Int32.MinValue, Int32.MaxValue));
 				}
 
 				gasMix.AddGas(Gas.WaterVapor, burnedFuel / AtmosDefines.TRITIUM_BURN_OXY_FACTOR);
@@ -53,8 +53,6 @@ namespace Atmospherics
 					gasMix.SetTemperature((gasMix.Temperature * oldHeatCap + energyReleased) / newHeatCap);
 				}
 			}
-
-			return 0f;
 		}
 	}
 }

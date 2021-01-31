@@ -1,10 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Light2D;
 using Mirror;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace Radiation
+namespace Systems.Radiation
 {
 	public class RadiationProducer : NetworkBehaviour
 	{
@@ -13,6 +13,7 @@ namespace Radiation
 		private GameObject mLightRendererObject;
 		private ObjectBehaviour objectBehaviour;
 		private RegisterObject registerObject;
+		[NonSerialized]
 		public int ObjectID = 0;
 		private LightSprite lightSprite;
 		public Sprite DotSprite;
@@ -69,7 +70,7 @@ namespace Radiation
 			}
 		}*/
 
-		public void Setlevel(float Invalue)
+		public void SetLevel(float Invalue)
 		{
 			SynchStrength(SynchroniseStrength, Invalue);
 		}

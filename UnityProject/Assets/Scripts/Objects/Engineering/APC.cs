@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using AddressableReferences;
 using Electricity.Inheritance;
+using Systems.Electricity;
 using Mirror;
-using NaughtyAttributes;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Electricity.PoweredDevices
+namespace Objects.Engineering
 {
 	[RequireComponent(typeof(ElectricalNodeControl))]
 	[RequireComponent(typeof(ResistanceSourceModule))]
@@ -39,15 +39,14 @@ namespace Electricity.PoweredDevices
 
 		public float Voltage => voltageSync;
 
-		private float current;
-		public float Current => current;
+		public float Current { get; private set; }
 
 		private ElectricalNodeControl electricalNodeControl;
 		private ResistanceSourceModule resistanceSourceModule;
 
 
-		[SerializeField][FormerlySerializedAs("NetTabType")]
-		private NetTabType netTabType;
+		[SerializeField, FormerlySerializedAs("NetTabType")]
+		private NetTabType netTabType = NetTabType.Apc;
 
 		/// <summary>
 		/// Function for setting the voltage via the property. Used for the voltage SyncVar hook.
@@ -118,11 +117,11 @@ namespace Electricity.PoweredDevices
 				connectedDepartmentBatteries.Clear();
 				foreach (var device in electricalNodeControl.Node.InData.Data.ResistanceToConnectedDevices)
 				{
-					if (device.Key.InData.Categorytype != PowerTypeCategory.DepartmentBattery) continue;
+					if (device.Key.Data.InData.Categorytype != PowerTypeCategory.DepartmentBattery) continue;
 
-					if (!connectedDepartmentBatteries.Contains(device.Key.GetComponent<DepartmentBattery>()))
+					if (!connectedDepartmentBatteries.Contains(device.Key.Data.GetComponent<DepartmentBattery>()))
 					{
-						connectedDepartmentBatteries.Add(device.Key.GetComponent<DepartmentBattery>());
+						connectedDepartmentBatteries.Add(device.Key.Data.GetComponent<DepartmentBattery>());
 					}
 				}
 			}
@@ -136,7 +135,7 @@ namespace Electricity.PoweredDevices
 			}
 			ElectricityFunctions.WorkOutActualNumbers(electricalNodeControl.Node.InData);
 			SyncVoltage(voltageSync, electricalNodeControl.Node.InData.Data.ActualVoltage);
-			current = electricalNodeControl.Node.InData.Data.CurrentInWire;
+			Current = electricalNodeControl.Node.InData.Data.CurrentInWire;
 			HandleDevices();
 			UpdateDisplay();
 		}
@@ -453,6 +452,9 @@ namespace Electricity.PoweredDevices
 			}
 		}
 
+		[Tooltip("Sound used when the APC loses all power.")]
+		[SerializeField] private AddressableAudioSource NoPowerSound = null;
+
 		public void TriggerSoundOff()
 		{
 			if(!CustomNetworkManager.IsServer) return;
@@ -466,8 +468,7 @@ namespace Electricity.PoweredDevices
 
 			if (State != APCState.Critical) yield break;
 
-			SoundManager.PlayNetworkedAtPos("APCPowerOff", gameObject.WorldPosServer());
+			SoundManager.PlayNetworkedAtPos(NoPowerSound, gameObject.WorldPosServer());
 		}
 	}
 }
-

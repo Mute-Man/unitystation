@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Objects;
 
 /// <summary>
 /// Defines fire sources like candles, lighters or activated welder
@@ -11,15 +12,6 @@ public class FireSource : MonoBehaviour, IServerSpawn
 	[SerializeField]
 	[Tooltip("Does this fire emit flame from start?")]
 	private bool isBurningOnSpawn = false;
-
-	[Temperature]
-	[SerializeField]
-	[Tooltip("Flame temperature in Kelvins")]
-	private float flameTemperature = 700f;
-
-	[SerializeField]
-	[Tooltip("Volume of flamed gas in m3")]
-	public float flameVolume = 0.005f;
 
 	private PushPull pushPull = null;
 	private bool isBurning = false;
@@ -86,7 +78,7 @@ public class FireSource : MonoBehaviour, IServerSpawn
 			if (registerTile)
 			{
 				var reactionManager = registerTile.Matrix.ReactionManager;
-				reactionManager.ExposeHotspotWorldPosition(position.To2Int(), flameTemperature, flameVolume);
+				reactionManager.ExposeHotspotWorldPosition(position.To2Int());
 			}
 		}
 	}

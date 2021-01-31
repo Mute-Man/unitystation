@@ -1,11 +1,13 @@
 using System.Collections;
+using AddressableReferences;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 
 #endif
 
-
+namespace Doors
+{
 	[ExecuteInEditMode]
 	public class AirLockAnimator : DoorAnimator
 	{
@@ -21,6 +23,8 @@ using UnityEditor;
 
 		public Sprite[] overlaySprites;
 
+		public AddressableAudioSource TripleBeep;
+
 		//animations
 		public override void AccessDenied(bool skipAnimation)
 		{
@@ -30,7 +34,7 @@ using UnityEditor;
 				return;
 			}
 			doorController.isPerformingAction = true;
-			SoundManager.PlayAtPosition("AccessDenied", transform.position, gameObject);
+			SoundManager.PlayAtPosition(SingletonSOSounds.Instance.AccessDenied, transform.position, gameObject);
 
 			// check if door uses a simple denied animation (flashes 1 frame on and off)
 			if (doorController.useSimpleDeniedAnimation)
@@ -60,7 +64,7 @@ using UnityEditor;
 			}
 
 			doorController.isPerformingAction = true;
-			SoundManager.PlayAtPosition("TripleBeep", transform.position, gameObject, polyphonic: true, isGlobal: true);
+			_ = SoundManager.PlayAtPosition(TripleBeep, transform.position, gameObject, polyphonic: true, isGlobal: true);
 			StartCoroutine(PlayPressureWarnAnim());
 		}
 
@@ -111,7 +115,8 @@ using UnityEditor;
 			StartCoroutine(MakePassable(skipAnimation));
 		}
 
-		private IEnumerator MakePassable(bool instant) {
+		private IEnumerator MakePassable(bool instant)
+		{
 			if (instant)
 			{
 				yield return WaitFor.EndOfFrame;
@@ -169,14 +174,15 @@ using UnityEditor;
 			StartCoroutine(MakeSolid(skipAnimation));
 		}
 
-		private IEnumerator MakeSolid(bool instant) {
+		private IEnumerator MakeSolid(bool instant)
+		{
 			if (instant)
 			{
 				yield return WaitFor.EndOfFrame;
 			}
 			else
 			{
-				yield return WaitFor.Seconds( 0.15f );
+				yield return WaitFor.Seconds(0.15f);
 			}
 			doorController.BoxCollToggleOn();
 		}
@@ -196,7 +202,7 @@ using UnityEditor;
 			if (offset > -1 && numberOfSpritesToPlay > 0)
 			{
 				// clamp to make sure that index is not out of range
-				int limit = Mathf.Clamp(offset + numberOfSpritesToPlay, 0, list.Length-1);
+				int limit = Mathf.Clamp(offset + numberOfSpritesToPlay, 0, list.Length - 1);
 				if (skipToEnd)
 				{
 					renderer.sprite = list[limit - 1];
@@ -270,11 +276,11 @@ using UnityEditor;
 		}
 
 		/// <summary>
-        /// Flashes the door's emergency access (yellow) lights several times,
-        /// or the door bolts, depending on the pressure difference over the door.
-        /// Sprite offset varies depending on door type - set in each door prefab.
-        /// </summary>
-        /// <returns></returns>
+		/// Flashes the door's emergency access (yellow) lights several times,
+		/// or the door bolts, depending on the pressure difference over the door.
+		/// Sprite offset varies depending on door type - set in each door prefab.
+		/// </summary>
+		/// <returns></returns>
 		private IEnumerator PlayPressureWarnAnim()
 		{
 			int flashCount = 3;
@@ -356,3 +362,4 @@ using UnityEditor;
 		}
 #endif
 	}
+}

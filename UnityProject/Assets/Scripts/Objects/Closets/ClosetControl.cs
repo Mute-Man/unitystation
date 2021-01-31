@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AddressableReferences;
 using UnityEngine;
 using Mirror;
 using UnityEngine.Serialization;
+using Objects;
 
 /// <summary>
 /// Allows closet to be opened / closed / locked
 /// </summary>
-[RequireComponent(typeof(RightClickAppearance))]
 public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, IRightClickable,
 	IServerLifecycle
 {
@@ -28,6 +29,10 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	[SerializeField]
 	private bool IsLockable = false;
 
+	[Tooltip("Whether or not the lock sprite is hidden when the container is opened.")]
+	[SerializeField]
+	private bool hideLockWhenOpened = true;
+
 	[Tooltip("Max amount of players that can fit in it at once.")]
 	[SerializeField]
 	private int playerLimit = 3;
@@ -35,7 +40,7 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	[Tooltip("Time to breakout or resist out of closet")]
 	[SerializeField]
 	private float breakoutTime = 120f;
-	
+
 	[Tooltip("Type of material to drop when destroyed")]
 	public GameObject matsOnDestroy;
 
@@ -47,23 +52,25 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	[FormerlySerializedAs("soundOnOpen")]
 	[Tooltip("Name of sound to play when opened / closed")]
 	[SerializeField]
-	private string soundOnOpenOrClose = "OpenClose";
+	private AddressableAudioSource soundOnOpenOrClose = null;
 
 	[Tooltip("Name of sound to play when emagged")]
 	[SerializeField]
-	private string soundOnEmag = "Grillehit";
+	private AddressableAudioSource soundOnEmag = null;
 
 	[Tooltip("Name of sound to play when emagged")]
 	[SerializeField]
-	private string soundOnEscape = "Rustle 1";
+	private AddressableAudioSource soundOnEscape = null;
 
-	[Tooltip("Sprite to show when door is open.")]
+	[Tooltip("SpriteHandler for the door or other sprite with different opened and closed states.")]
 	[SerializeField]
-	private Sprite doorOpened = null;
+	protected SpriteHandler doorSpriteHandler;
 
-	[Tooltip("Renderer for the whole locker")]
-	[SerializeField]
-	protected SpriteRenderer spriteRenderer;
+	private enum DoorState
+	{
+		Closed,
+		Opened
+	}
 
 	[Tooltip("GameObject for the lock overlay")]
 	[SerializeField]
@@ -154,9 +161,6 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 
 	private RegisterCloset registerTile;
 	private PushPull pushPull;
-	//cached closed door sprite, initialized from whatever sprite the sprite renderer is initially set
-	//to in the prefab
-	private Sprite doorClosed;
 
 	private Matrix Matrix => registerTile.Matrix;
 	private PushPull PushPull
@@ -183,7 +187,6 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	private void EnsureInit()
 	{
 		if (registerTile != null) return;
-		doorClosed = spriteRenderer != null ? spriteRenderer.sprite : null;
 
 		registerTile = GetComponent<RegisterCloset>();
 		pushPull = GetComponent<PushPull>();
@@ -367,7 +370,7 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	/// </summary>
 	public void BreakLock()
 	{
-		//Disable the lock and hide its light 
+		//Disable the lock and hide its light
 		if (IsLockable)
 		{
 			SyncLocked(isLocked, false);
@@ -388,9 +391,9 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	public void ServerWeld()
 	{
 		if (this == null || gameObject == null) return; // probably destroyed by a shuttle crash
-	
+
 		SyncIsWelded(isWelded, !isWelded);
-		
+
 	}
 
 	private void SyncIsWelded(bool _wasWelded, bool _isWelded)
@@ -424,16 +427,16 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 	{
 		if (statusSync == ClosetStatus.Open)
 		{
-			spriteRenderer.sprite = doorOpened;
-			if (lockLight && IsLockable)
+			doorSpriteHandler.ChangeSprite((int) DoorState.Opened);
+			if (lockLight && IsLockable && hideLockWhenOpened)
 			{
 				lockLight.Hide();
 			}
 		}
 		else
 		{
-			spriteRenderer.sprite = doorClosed;
-			if (lockLight && IsLockable)
+			doorSpriteHandler.ChangeSprite((int) DoorState.Closed);
+			if (lockLight && IsLockable && hideLockWhenOpened)
 			{
 				lockLight.Show();
 			}
@@ -481,15 +484,49 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 
 	public void ServerPerformInteraction(HandApply interaction)
 	{
+		// Locking/Unlocking by alt clicking
+		if (interaction.IsAltClick)
+		{
+			if(IsLockable && AccessRestrictions != null && ClosetStatus.Equals(ClosetStatus.Closed))
+			{
+				// Default CheckAccess will check for the ID slot first
+				// so the default AltClick interaction will prioritize
+				// the ID slot, only when that would fail the hand
+				// will be checked, alternatively the user can also
+				// just click the locker with the ID inhand.
+				if (AccessRestrictions.CheckAccess(interaction.Performer))
+				{
+
+					if (isLocked)
+					{
+						SyncLocked(isLocked, false);
+						Chat.AddExamineMsg(interaction.Performer, $"You unlock the {closetName}.");
+					}
+					else
+					{
+						SyncLocked(isLocked, true);
+						Chat.AddExamineMsg(interaction.Performer, $"You lock the {closetName}.");
+					}
+
+				}
+			}
+
+			// Alt clicking is the locker's only alt click behaviour.
+			return;
+		}
+
 		// Is the player trying to put something in the closet?
-		if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Emag))
+		if (Validations.HasItemTrait(interaction.HandObject, CommonTraits.Instance.Emag)
+			&& interaction.HandObject.TryGetComponent<Emag>(out var emag)
+			&& emag.EmagHasCharges())
 		{
 			if (IsClosed && !isEmagged)
 			{
 				SoundManager.PlayNetworkedAtPos(soundOnEmag, registerTile.WorldPositionServer, 1f, gameObject);
 				//ServerHandleContentsOnStatusChange(false);
 				isEmagged = true;
-				
+				emag.UseCharge(interaction);
+
 				//SyncStatus(statusSync, ClosetStatus.Open);
 				BreakLock();
 			}
@@ -542,12 +579,12 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 					interaction.Performer,
 					$"Can\'t open {closetName}");
 				}
-	
+
 			}
 		}
-				
+
 		// player trying to unlock locker?
-		if (IsLockable && AccessRestrictions != null)
+		if (IsLockable && AccessRestrictions != null && ClosetStatus.Equals(ClosetStatus.Closed))
 		{
 			// player trying to open lock by card?
 			if (AccessRestrictions.CheckAccessCard(interaction.HandObject))
@@ -555,10 +592,12 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 				if (isLocked)
 				{
 					SyncLocked(isLocked, false);
+					Chat.AddExamineMsg(interaction.Performer, $"You unlock the {closetName}.");
 				}
 				else
 				{
 					SyncLocked(isLocked, true);
+					Chat.AddExamineMsg(interaction.Performer, $"You lock the {closetName}.");
 				}
 			}
 			// player with access can unlock just by click
@@ -567,6 +606,7 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 				if (isLocked)
 				{
 					SyncLocked(isLocked, false);
+					Chat.AddExamineMsg(interaction.Performer, $"You unlock the {closetName}.");
 				}
 			}
 		}
@@ -574,7 +614,7 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 
 	public void PlayerTryEscaping(GameObject player)
 	{
-		// First, try to just open the closet. 
+		// First, try to just open the closet.
 		if (!isLocked && !isWelded)
 		{
 			ServerToggleClosed();
@@ -586,7 +626,7 @@ public class ClosetControl : NetworkBehaviour, ICheckedInteractable<HandApply>, 
 
 			void ProgressFinishAction()
 			{
-				//TODO: Add some sound here. 
+				//TODO: Add some sound here.
 				ServerToggleClosed();
 				BreakLock();
 
